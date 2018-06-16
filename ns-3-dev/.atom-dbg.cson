@@ -1,0 +1,9 @@
+"scratch/risk-vanet.cc":
+	debugger: "dbg-gdb"
+	path: "scratch/risk-vanet.cc"
+	cwd: "scratch"
+
+"scratch/risk-vanet.cc 2":
+	debugger: "dbg-gdb"
+	path: "scratch/risk-vanet.cc"
+	cwd: "scratch"
