@@ -148,6 +148,7 @@ std::vector <PacketInfo> PacketList;
 //std::vector <PacketInfo> hp_PacketList;
 std::map <uint32_t, PacketInfo *> hp_PacketList;
 std::map <uint32_t, PacketInfo *> hp_missedPacketList;
+double m_lane_thres=2.0;
 //int crashes=0;
 //static std::atomic<int> crashes(0);
 //static std::atomic<int> MsgId(0);
@@ -181,7 +182,7 @@ BsmApplication::BsmApplication ()
     m_unirv (0),
     m_nodeId (0),
     m_chAccessMode (0),
-    m_txMaxDelay (MilliSeconds (20)),
+    m_txMaxDelay (MilliSeconds (30)),
     m_prevTxDelay (MilliSeconds (0)),
     m_prioritytag (1)
     //m_CSVfileName3("transmit_output.csv")
@@ -509,8 +510,10 @@ BsmApplication::GenerateWaveTraffic (Ptr<Socket> socket, uint32_t pktSize,
       int senderMoving = m_nodesMoving->at (txNodeId);
       if (senderMoving != 0)
         {
-          priority=GetPriorityLevel(txNodeId);
-
+          /*OLD CODE for priority!!!!!!!
+          //priority=GetPriorityLevel(txNodeId);
+          */
+          priority=GetAdaptivePriorityLevel(txNodeId);
           //  SeqTsHeader seqTs;
         //  seqTs.SetSeq (pktCount);
         //  Ptr<Packet> p = Create<Packet> (pktSize-(8+4)); // 8+4 : the size of the seqTs header
@@ -689,7 +692,7 @@ BsmApplication::GeneratePriorityWaveTraffic (Ptr<Socket> socket, uint32_t pktSiz
       int senderMoving = m_nodesMoving->at (txNodeId);
       if (senderMoving != 0)
         {
-          //priority=GetPriorityLevel(txNodeId);
+
           priority=GetAdaptivePriorityLevel(txNodeId);
 
           //  SeqTsHeader seqTs;
@@ -886,7 +889,7 @@ int BsmApplication::GetPriorityLevel(int sendingNodeId)
               double ttc_thres;
               double ttc_thres_upper;
               ttc_thres=4.0;
-              ttc_thres_upper=6.0;
+              ttc_thres_upper=8.0;
               // confirm that the receiving node
               // has also started moving in the scenario
               // if it has not started moving, then
@@ -895,7 +898,11 @@ int BsmApplication::GetPriorityLevel(int sendingNodeId)
               if (receiverMoving == 1)
                 {
                   double distSq = MobilityHelper::GetDistanceSquaredBetween (txNode, rxNode);
-                  ttc=std::sqrt(distSq/rel_vel);
+                  double ttc_2=std::sqrt(distSq/rel_vel);
+                  ttc=GetTTC(txNodeId,rxNodeId);
+                  if(ttc_2!=ttc){
+                    std::cout << "PROBLEM in GPL1: " << " ttc original: "<< ttc_2<< " ttc new: "<< ttc << std::endl;
+                  }
                   //ttc=(distSq/rel_vel);
                   //std::cout << "time to collision" << ttc << '\n';
                   if (distSq > 0.0)
@@ -959,7 +966,11 @@ int BsmApplication::GetPriorityLevel(int sendingNodeId, int rxNodeId)
               if (receiverMoving == 1)
                 {
                   double distSq = MobilityHelper::GetDistanceSquaredBetween (txNode, rxNode);
-                  ttc=std::sqrt(distSq/rel_vel);
+                  double ttc_2=std::sqrt(distSq/rel_vel);
+                  ttc=GetTTC(txNodeId,rxNodeId);
+                  if(ttc_2!=ttc){
+                    std::cout << "PROBLEM in GPL2: " << " ttc original: "<< ttc_2<< " ttc new: "<< ttc << std::endl;
+                  }
                   //ttc=(distSq/rel_vel);
                   if (distSq > 0.0)
                     {
@@ -1019,7 +1030,7 @@ double BsmApplication::GetAdaptivePriorityLevel(int sendingNodeId)
               double ttc_thres;
               double ttc_thres_upper;
               ttc_thres=4.0;
-              ttc_thres_upper=6.0;
+              ttc_thres_upper=8.0;
               // confirm that the receiving node
               // has also started moving in the scenario
               // if it has not started moving, then
@@ -1028,7 +1039,18 @@ double BsmApplication::GetAdaptivePriorityLevel(int sendingNodeId)
               if (receiverMoving == 1)
                 {
                   double distSq = MobilityHelper::GetDistanceSquaredBetween (txNode, rxNode);
-                  ttc=std::sqrt(distSq/rel_vel);
+                  double ttc_2=std::sqrt(distSq/rel_vel);
+                  ttc=GetTTC(txNodeId,rxNodeId);
+
+                  Ptr<ConstantVelocityMobilityModel> mob_tx = txNode-> GetObject<ConstantVelocityMobilityModel>();
+                  Ptr<ConstantVelocityMobilityModel> mob_rx = rxNode-> GetObject<ConstantVelocityMobilityModel>();
+                  NS_ASSERT(mob_tx);
+                  NS_ASSERT(mob_rx);
+                  Vector posm_rx = mob_rx->GetPosition (); // Get position
+                  Vector posm_tx = mob_tx->GetPosition (); // Get position
+                  if(ttc_2!=ttc){
+                    std::cout << "PROBLEM in AGPL1 " << " ttc_original: "<< ttc_2<< " ttc_new: "<< ttc << " distsq_new: "<< distSq << " relvel_new: "<< rel_vel << " txnodeID: "<< txNodeId <<" rxnodeID: "<< rxNodeId << " rxnode_pos: "<< posm_rx << " txnode_pos: "<< posm_tx << std::endl;
+                  }
                   //ttc=(distSq/rel_vel);
                   if (distSq > 0.0)
                     {
@@ -1037,26 +1059,21 @@ double BsmApplication::GetAdaptivePriorityLevel(int sendingNodeId)
                         {
                           if (distSq <= m_txSafetyRangesSq[index - 1])
                             {
-                              if (ttc < ttc_thres)
-                              {
+                              if ((ttc < ttc_thres) && (std::abs(posm_rx.y-posm_tx.y)<m_lane_thres)){
+                                //std::cout << "ttcHP : " << ttc << std::endl;
                                 //std::cout << "priority 5 ttc: " << ttc << std::endl;
                                 priority = 5;
                                 return priority;
                               }
-                              else if(ttc<ttc_thres_upper){
-                                /*double c= min_priority+ttc_thres_upper*(max_priority - min_priority)/(ttc_thres_upper - ttc_thres);
-                                priority=  c- ttc*(max_priority - min_priority)/(ttc_thres_upper - ttc_thres);*/
+                              else if(ttc<ttc_thres_upper && (std::abs(posm_rx.y-posm_tx.y)<m_lane_thres)){
                                 //std::cout << "mid priority ttc: " << ttc << std::endl;
                                 double c= min_priority+ttc_thres_upper*(max_priority - min_priority)/(ttc_thres_upper - ttc_thres);
                                 priority=  c- (max_priority - min_priority)/(ttc_thres_upper - ttc_thres)*ttc;
-                                //return priority;
                                 //std::cout << "Adaptive priority "<< priority <<" c constant: " << c << " other constant" << (max_priority - min_priority)/(ttc_thres_upper - ttc_thres) << " max priority " << max_priority << " ttc_thres: "  << ttc_thres << " ttc_thres_upper: " << ttc_thres_upper << " ttc: " << ttc <<'\n';
-                                //return priority;
                               }
                               else{
-                                //if(priority==1){
+                                //std::cout << "low priority ttc : " << ttc << std::endl;
                                   priority=1;
-                                //}
                               }
                             }
                         }
@@ -1098,7 +1115,7 @@ double BsmApplication::GetAdaptivePriorityLevel(int sendingNodeId, int rxNodeId)
               double ttc_thres;
               double ttc_thres_upper;
               ttc_thres=4.0;
-              ttc_thres_upper=6.0;
+              ttc_thres_upper=8.0;
               // confirm that the receiving node
               // has also started moving in the scenario
               // if it has not started moving, then
@@ -1107,7 +1124,17 @@ double BsmApplication::GetAdaptivePriorityLevel(int sendingNodeId, int rxNodeId)
               if (receiverMoving == 1)
                 {
                   double distSq = MobilityHelper::GetDistanceSquaredBetween (txNode, rxNode);
-                  ttc=std::sqrt(distSq/rel_vel);
+                  double ttc_2=std::sqrt(distSq/rel_vel);
+                  ttc=GetTTC(txNodeId,rxNodeId);
+                  Ptr<ConstantVelocityMobilityModel> mob_tx = txNode-> GetObject<ConstantVelocityMobilityModel>();
+                  Ptr<ConstantVelocityMobilityModel> mob_rx = rxNode-> GetObject<ConstantVelocityMobilityModel>();
+                  NS_ASSERT(mob_tx);
+                  NS_ASSERT(mob_rx);
+                  Vector posm_rx = mob_rx->GetPosition (); // Get position
+                  Vector posm_tx = mob_tx->GetPosition (); // Get position
+                  if(ttc_2!=ttc){
+                    std::cout << "PROBLEM in AGPL2 " << " ttc_original: "<< ttc_2<< " ttc_new: "<< ttc << " distsq_new: "<< distSq << " relvel_new: "<< rel_vel << " txnodeID: "<< txNodeId <<" rxnodeID: "<< rxNodeId << " rxnode_pos: "<< posm_rx << " txnode_pos: "<< posm_tx << " txnode_vel: "<< vel << " rxnode_vel:"<< vel_rx << std::endl;
+                  }
                   //ttc=(distSq/rel_vel);
                   if (distSq > 0.0)
                     {
@@ -1116,26 +1143,21 @@ double BsmApplication::GetAdaptivePriorityLevel(int sendingNodeId, int rxNodeId)
                         {
                           if (distSq <= m_txSafetyRangesSq[index - 1])
                             {
-                              if (ttc < ttc_thres)
-                              {
+                              if ((ttc < ttc_thres) && (std::abs(posm_rx.y-posm_tx.y)<m_lane_thres)){
                                 //std::cout << "ttcHP : " << ttc << std::endl;
                                 //std::cout << "priority 5 ttc: " << ttc << std::endl;
                                 priority = 5;
                                 return priority;
                               }
-                              else if(ttc<ttc_thres_upper){
+                              else if(ttc<ttc_thres_upper && (std::abs(posm_rx.y-posm_tx.y)<m_lane_thres)){
                                 //std::cout << "mid priority ttc: " << ttc << std::endl;
                                 double c= min_priority+ttc_thres_upper*(max_priority - min_priority)/(ttc_thres_upper - ttc_thres);
                                 priority=  c- (max_priority - min_priority)/(ttc_thres_upper - ttc_thres)*ttc;
-                                //return priority;
                                 //std::cout << "Adaptive priority "<< priority <<" c constant: " << c << " other constant" << (max_priority - min_priority)/(ttc_thres_upper - ttc_thres) << " max priority " << max_priority << " ttc_thres: "  << ttc_thres << " ttc_thres_upper: " << ttc_thres_upper << " ttc: " << ttc <<'\n';
                               }
                               else{
                                 //std::cout << "low priority ttc : " << ttc << std::endl;
-                                //if(priority==1){
                                   priority=1;
-                                //}
-
                               }
                             }
                         }
@@ -1180,6 +1202,17 @@ double BsmApplication::GetTTC(int sendingNodeId, int rxNodeId)
                 {
                   double distSq = MobilityHelper::GetDistanceSquaredBetween (txNode, rxNode);
                   ttc=std::sqrt(distSq/rel_vel);
+                  /* Lane checking code*/
+                  /*
+                  Ptr<ConstantVelocityMobilityModel> mob_tx = txNode-> GetObject<ConstantVelocityMobilityModel>();
+                  Ptr<ConstantVelocityMobilityModel> mob_rx = rxNode-> GetObject<ConstantVelocityMobilityModel>();
+                  NS_ASSERT(mob_tx);
+                  NS_ASSERT(mob_rx);
+                  Vector posm_rx = mob_rx->GetPosition (); // Get position
+                  Vector posm_tx = mob_tx->GetPosition (); // Get position
+                  ttc=
+                  */
+                  /* End of Lane checking code*/
 
                 }
               }
@@ -1435,7 +1468,11 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
   //int priority_hp;
   priority=GetAdaptivePriorityLevel(txNodeId);
   double priority_threshold=5.0;
-  //priority_hp=GetPriorityLevel(txNodeId,rxNodeId);
+  double priority_rxtx;
+  priority_rxtx=GetAdaptivePriorityLevel(txNodeId,rxNodeId);
+  /*if(priority>=priority_threshold){
+    m_waveBsmStats_hp->IncRxPktCount ();
+  }*/
   if(priority>=priority_threshold){
     m_waveBsmStats_hp->IncRxPktCount ();
   }
@@ -1447,30 +1484,23 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
   if(priority_hp==5){
     m_waveBsmStats_hp->IncRxPktCount ();
   }*/
-  double priority_rxtx;
-  priority_rxtx=GetAdaptivePriorityLevel(txNodeId,rxNodeId);
   /*new code*/
   static std::atomic<int> crashes(0);
   if(priority_rxtx>=priority_threshold){
-    if(GetTTC(txNodeId,rxNodeId)<2)
-    {
-      crashes++;
-      std::cout << "crash occurred" << crashes << '\n';
-
-    }
     Ptr<ConstantVelocityMobilityModel> mob_tx = txNode-> GetObject<ConstantVelocityMobilityModel>();
     Ptr<ConstantVelocityMobilityModel> mob_rx = rxNode-> GetObject<ConstantVelocityMobilityModel>();
     NS_ASSERT(mob_tx);
     NS_ASSERT(mob_rx);
-    //Vector posm_rx = mob_rx->GetPosition (); // Get position
+    Vector posm_rx = mob_rx->GetPosition (); // Get position
     Vector vel_rx = mob_rx->GetVelocity (); // Get velocity
-    //Vector posm_tx = mob_tx->GetPosition (); // Get position
+    Vector posm_tx = mob_tx->GetPosition (); // Get position
     Vector vel_tx = mob_tx->GetVelocity (); // Get velocity
     if(vel_tx.x<=vel_rx.x){
-      std::cout << "vel_rx: " << vel_rx.x << " vel_tx: " << vel_tx.x << "priority"<< priority_rxtx <<'\n';
-      if(vel_rx.x-vel_tx.x>1){
-        //mob_rx->SetVelocity(Vector(vel_rx.x-1,0.0,0.0));
-        mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
+      //std::cout << "vel_rx: " << vel_rx.x << " vel_tx: " << vel_tx.x << " priority: "<< priority_rxtx <<'\n';
+      std::cout << Simulator::Now () << " rxNode: " << rxNodeId <<" POS: x=" << posm_rx.x << ", y=" << posm_rx.y << ", z=" << posm_rx.z << "vel_rx: " << vel_rx.x << " vel_tx: " << vel_tx.x << " priority: "<< priority_rxtx <<'\n';
+      if((vel_rx.x-vel_tx.x)>1 && (posm_rx.x<posm_tx.x)){
+        mob_rx->SetVelocity(Vector(vel_rx.x-1,0.0,0.0));
+        //mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
       }
       else{
         mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
@@ -1480,7 +1510,45 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
     else{
       mob_rx->SetVelocity(Vector(vel_rx.x,0.0,0.0));
     }
+    if((GetTTC(txNodeId,rxNodeId)<2) && (std::abs(posm_rx.y-posm_tx.y)<=m_lane_thres))
+    {
+      crashes++;
+      std::cout << "crash occurred" << crashes << " Time: " << Simulator::Now().GetMilliSeconds () << " rxNode: " << rxNodeId << " txNode: " << txNodeId << " POSRX: x=" << posm_rx.x << ", y=" << posm_rx.y << " POSTX: x=" << posm_tx.x << ", y=" << posm_tx.y << "vel_rx: " << vel_rx.x << "  vel_tx: " << vel_tx.x << " priority: "<< priority_rxtx <<'\n';
+      std::cout << "difference in y positions: " << std::abs(posm_tx.y-posm_rx.y) << " lane thres: "<< m_lane_thres <<'\n';
+      //mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
+
+      Ptr<UniformRandomVariable> var2 = CreateObject<UniformRandomVariable> ();
+      int64_t stream2 = 2;
+      var2->SetStream (stream2);
+      Vector posm = mob_rx->GetPosition (); // Get position
+      double temp=var2->GetValue (0.0,3.0);
+      if(temp>0.0 && temp<1.0){
+        mob_rx->SetPosition(Vector(0, 2.0, posm.z));
+        mob_tx->SetPosition(Vector(0, 6.0, posm.z));
+      }
+      else if(temp>1.0 && temp<2.0){
+        mob_rx->SetPosition(Vector(0, 6.0, posm.z));
+        mob_tx->SetPosition(Vector(0, 10.0, posm.z));
+      }
+      else if(temp>2.0 && temp<3.0){
+        mob_rx->SetPosition(Vector(0, 10.0, posm.z));
+        mob_tx->SetPosition(Vector(0, 2.0, posm.z));
+      }
+      else{
+        std::cout << "error in allocating y position: " << temp << '\n';
+      }
+      if((posm_rx.x<posm_tx.x)){
+        //mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
+
+        //mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
+      }
+      else{
+        //mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
+      }
+
+    }
   }
+
   /*end of new code*/
 
 

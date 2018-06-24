@@ -1791,21 +1791,29 @@ CourseChange (std::ostream *os, std::string context, Ptr<const MobilityModel> mo
   pos.z = 1.5;
 
   int nodeId = mobility->GetObject<Node> ()->GetId ();
-
+  //velocities[nodeId]=vel;
+  for (std::map <uint32_t, Vector>::iterator it_vel = velocities.begin() ; it_vel != velocities.end(); ++it_vel){
+    std::cout << "Node_ID: " << it_vel->first << " Vel: " << it_vel->second <<std::endl;
+  }
   std::cout << "In course change for node " << nodeId <<'\n';
   double t = (Simulator::Now ()).GetSeconds ();
   if (t >= 1.0)
     {
+      //m_streamIndex += mobilityAdhoc.AssignStreams (m_adhocTxNodes, m_streamIndex);
       WaveBsmHelper::GetNodesMoving ()[nodeId] = 1;
     }
 
   //NS_LOG_UNCOND ("Changing pos for node=" << nodeId << " at " << Simulator::Now () );
 
   // Prints position and velocities
-
-  std::cout << Simulator::Now () << " POS: x=" << pos.x << ", y=" << pos.y
-      << ", z=" << pos.z << "; VEL:" << vel.x << ", y=" << vel.y
-      << ", z=" << vel.z << std::endl;
+  /*
+  for(int i=0;i<m_adhocTxNodes.GetN(); i++){
+    Ptr<ConstantVelocityMobilityModel> mob = m_adhocTxNodes.Get(i)-> GetObject<ConstantVelocityMobilityModel>();
+    Vector posm = mob->GetPosition (); // Get position
+    Vector vel = mob->GetVelocity (); // Get velocity
+    std::cout << Simulator::Now () << " Node: " << i << " POS: x=" << posm.x << ", y=" << posm.y << ", z=" << posm.z << "; VEL:" << vel.x << ", y=" << vel.y  << ", z=" << vel.z << std::endl;
+  }*/
+  std::cout << Simulator::Now () << " POS: x=" << pos.x << ", y=" << pos.y << ", z=" << pos.z << "; VEL:" << vel.x << ", y=" << vel.y << ", z=" << vel.z << std::endl;
   *os << Simulator::Now () << " POS: x=" << pos.x << ", y=" << pos.y
       << ", z=" << pos.z << "; VEL:" << vel.x << ", y=" << vel.y
       << ", z=" << vel.z << std::endl;
@@ -1827,8 +1835,8 @@ VanetRoutingExperiment::CheckThroughput ()
   int wavePktsReceived_hp = m_waveBsmHelper.GetWaveBsmStats_hp ()->GetRxPktCount ();
   if (wavePktsSent > 0)
     {
-      int wavePktsReceived = m_waveBsmHelper.GetWaveBsmStats ()->GetRxPktCount ();
-      int wavePktsReceived_hp = m_waveBsmHelper.GetWaveBsmStats_hp ()->GetRxPktCount ();
+      wavePktsReceived = m_waveBsmHelper.GetWaveBsmStats ()->GetRxPktCount ();
+      wavePktsReceived_hp = m_waveBsmHelper.GetWaveBsmStats_hp ()->GetRxPktCount ();
       wavePDR = (double) wavePktsReceived / (double) wavePktsSent;
       wavePDR_hp = (double) wavePktsReceived_hp / (double) wavePktsSent_hp;
     }
@@ -1954,14 +1962,18 @@ VanetRoutingExperiment::CheckThroughput ()
       NS_ASSERT(mob);
       Vector posm = mob->GetPosition (); // Get position
       Vector vel = mob->GetVelocity (); // Get velocity
-        if(posm.x>2000){
+      if(posm.x>2000){
           mob->SetPosition(Vector(0.0, posm.y, posm.z));
           mob->SetVelocity(velocities[i]);
+          //m_streamIndex += mobilityAdhoc.AssignStreams (m_adhocTxNodes, m_streamIndex);
+          WaveBsmHelper::GetNodesMoving ().resize (m_nNodes, 1);
+          //WaveBsmHelper::GetNodesMoving ()[i] = 1;
         }
+      posm = mob->GetPosition (); // Get position
+      vel = mob->GetVelocity (); // Get velocity
+      NS_ASSERT(mob);
 
-      std::cout << Simulator::Now () << " POS: x=" << posm.x << ", y=" << posm.y
-          << ", z=" << posm.z << "; VEL:" << vel.x << ", y=" << vel.y
-                << ", z=" << vel.z << std::endl;
+       std::cout << "debugline: " << Simulator::Now () << " Node: " << i <<" POS: x=" << posm.x << ", y=" << posm.y << ", z=" << posm.z << "; VEL:" << vel.x << ", y=" << vel.y << ", z=" << vel.z << " VEL_SET" << velocities[i] << std::endl;
     }
     //std::cout << "about to check throughput" << '\n';
   Simulator::Schedule (Seconds (1.0), &VanetRoutingExperiment::CheckThroughput, this);
@@ -2272,7 +2284,8 @@ VanetRoutingExperiment::SetupAdhocMobilityNodes ()
       //pos.Set ("X", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=1500.0]"));
       //pos.Set ("Y", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=300.0]"));
       pos.Set ("X", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=2000.0]")); //Distance to 1 km
-      pos.Set ("Y", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=100.0]"));
+      pos.Set ("Y", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=12.0]"));
+      //pos.Set ("Y", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=100.0]"));
       // we need antenna height uniform [1.0 .. 2.0] for loss model
       pos.Set ("Z", StringValue ("ns3::UniformRandomVariable[Min=1.0|Max=2.0]"));
 
@@ -2291,24 +2304,38 @@ VanetRoutingExperiment::SetupAdhocMobilityNodes ()
       mobilityAdhoc.SetPositionAllocator (taPositionAlloc);
       mobilityAdhoc.Install (m_adhocTxNodes);
 
-      //Ptr<UniformRandomVariable> var = CreateObject<UniformRandomVariable> ();
+      Ptr<UniformRandomVariable> var2 = CreateObject<UniformRandomVariable> ();
       Ptr<NormalRandomVariable> var=CreateObject<NormalRandomVariable> ();
       int64_t stream = 2;
+      int64_t stream2 = 2;
       var->SetStream (stream);
-
+      var2->SetStream (stream2);
       for(int i=0;i<m_adhocTxNodes.GetN(); i++){
         Ptr<ConstantVelocityMobilityModel> mob = m_adhocTxNodes.Get(i)-> GetObject<ConstantVelocityMobilityModel>();
               //mob->SetVelocity(Vector(var->GetValue (0.0,20.0), var->GetValue (-2.0,2.0), 0.0));
               //mob->SetVelocity(Vector(30+std::sqrt(10)*var->GetValue (), 0.0, 0.0));
               //Vector node_vel=Vector(var->GetValue (0.0,35.0), 0.0, 0.0);
-              Vector node_vel=Vector(30+std::sqrt(10)*var->GetValue (), 0.0, 0.0);
-              mob->SetVelocity(node_vel);
-              velocities[i]=node_vel;
         Vector posm = mob->GetPosition (); // Get position
-          Vector vel = mob->GetVelocity (); // Get velocity
-        std::cout << Simulator::Now () << " POS: x=" << posm.x << ", y=" << posm.y
-            << ", z=" << posm.z << "; VEL:" << vel.x << ", y=" << vel.y
-                  << ", z=" << vel.z << std::endl;
+        double temp=var2->GetValue (0.0,3.0);
+        if(temp>0.0 && temp<1.0){
+          mob->SetPosition(Vector(posm.x, 2.0, posm.z));
+        }
+        else if(temp>1.0 && temp<2.0){
+          mob->SetPosition(Vector(posm.x, 6.0, posm.z));
+        }
+        else if(temp>2.0 && temp<3.0){
+          mob->SetPosition(Vector(posm.x, 10.0, posm.z));
+        }
+        else{
+          std::cout << "error in allocating y position: " << temp << '\n';
+        }
+
+        Vector node_vel=Vector(30+std::sqrt(10)*var->GetValue (), 0.0, 0.0);
+        mob->SetVelocity(node_vel);
+        velocities[i]=node_vel;
+        posm = mob->GetPosition (); // Get position
+        Vector vel = mob->GetVelocity (); // Get velocity
+        std::cout << Simulator::Now () << " POS: x=" << posm.x << ", y=" << posm.y << ", z=" << posm.z << "; VEL:" << vel.x << ", y=" << vel.y  << ", z=" << vel.z << std::endl;
       }
 
 

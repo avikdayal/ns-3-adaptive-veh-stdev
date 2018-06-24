@@ -51,7 +51,7 @@ WaveBsmStats::GetTypeId (void)
     ;
   return tid;
 }
-  
+
 void
 WaveBsmStats::IncTxPktCount ()
 {
@@ -143,6 +143,9 @@ WaveBsmStats::GetBsmPdr (int index)
           pdr = 1.0;
         }
     }
+    else{
+      return -1.0;
+    }
 
   return pdr;
 }
@@ -163,6 +166,9 @@ WaveBsmStats::GetCumulativeBsmPdr (int index)
         {
           pdr = 1.0;
         }
+    }
+    else{
+      return -1.0;
     }
 
   return pdr;

@@ -30,3 +30,15 @@
 *.exe
 *.out
 *.app
+*.csv
+*.pdf
+*.log
+bake/
+gnuplot-5.2.2/
+netanim/
+pybindgen/
+sumo-0.32.0/
+ns-3-dev/tmp/
+*.swp
+*.mat
+*.m~
