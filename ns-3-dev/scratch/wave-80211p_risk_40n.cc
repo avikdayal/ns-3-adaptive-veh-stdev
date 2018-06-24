@@ -192,8 +192,8 @@ int main (int argc, char *argv[])
   wifiPhy.EnablePcap ("wave-simple-80211p", devices);
 
   MobilityHelper mobility;
-  int avik_code;
-  avik_code=1;
+  //int avik_code;
+  //avik_code=1;
   int64_t m_streamIndex=0;
 
   /*

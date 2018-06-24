@@ -887,9 +887,9 @@ int BsmApplication::GetPriorityLevel(int sendingNodeId)
               double rel_vel=(double)(std::abs(node_speed-node_speed_rx));
               double ttc;//time to collision
               double ttc_thres;
-              double ttc_thres_upper;
+              //double ttc_thres_upper;
               ttc_thres=4.0;
-              ttc_thres_upper=8.0;
+              //ttc_thres_upper=8.0;
               // confirm that the receiving node
               // has also started moving in the scenario
               // if it has not started moving, then
@@ -1644,12 +1644,12 @@ void printAppStats(std::string CSVfileName3){
   int lptx_count=0;
   int tempID=0;
 
-  int tempID_msg=0;
+  uint32_t tempID_msg=0;
   int hp2hp_count_msg=0;
   int hp_count_msg=0;
   int lp_count_msg=0;
-  int hptx_count_msg=0;
-  int lptx_count_msg=0;
+  //int hptx_count_msg=0;
+  //int lptx_count_msg=0;
 
   double hp2hp_delay_msg=0;
   double hp_delay_msg=0;
@@ -1676,7 +1676,7 @@ void printAppStats(std::string CSVfileName3){
       out2 << it->m_msgId << "," << it->m_txNodeId<< "," << it->m_rxNodeId << ","<< it->m_txpriority << "," << it->m_rxpriority <<"," << it->m_lag_time << "," << it->m_ttc <<"," << it->m_dist <<"," << it->m_txspeed <<"," << it->m_rxspeed << "," << it->m_sysTime << std::endl;
 
       if(it->m_txpriority==5){
-        if(tempID<=it->m_msgId){
+        if((int)tempID <= (int)it->m_msgId){
           tempID=it->m_msgId;
           hptx_count++;
         }
@@ -1686,13 +1686,13 @@ void printAppStats(std::string CSVfileName3){
           hp_delay_msg=hp_delay_msg/((double)hp_count_msg);
           lp_delay_msg=lp_delay_msg/((double)lp_count_msg);
 
-          if(isnan(hp2hp_delay_msg)){
+          if(std::isnan(hp2hp_delay_msg)){
             hp2hp_delay_msg=-1;
           }
-          if(isnan(hp_delay_msg)){
+          if(std::isnan(hp_delay_msg)){
             hp_delay_msg=-1;
           }
-          if(isnan(lp_delay_msg)){
+          if(std::isnan(lp_delay_msg)){
             lp_delay_msg=-1;
           }
           out3 << it->m_msgId << "," << it->m_txNodeId <<","<< hp2hp_count_msg << ","<< hp_count_msg << "," << lp_count_msg << "," << hp2hp_delay_msg << "," << hp_delay_msg << ","<<lp_delay_msg << std::endl;
@@ -1700,8 +1700,8 @@ void printAppStats(std::string CSVfileName3){
           hp2hp_count_msg=0;
           hp_count_msg=0;
           lp_count_msg=0;
-          hptx_count_msg=0;
-          lptx_count_msg=0;
+          //hptx_count_msg=0;
+          //lptx_count_msg=0;
           hp2hp_delay_msg=0;
           hp_delay_msg=0;
           lp_delay_msg=0;
@@ -1736,7 +1736,7 @@ void printAppStats(std::string CSVfileName3){
         }
       }
       else{
-        if(tempID<=it->m_msgId){
+        if((int)tempID <= (int)it->m_msgId){
           tempID=it->m_msgId;
           lptx_count++;
         }
@@ -1746,13 +1746,13 @@ void printAppStats(std::string CSVfileName3){
           hp_delay_msg=hp_delay_msg/((double)hp_count_msg);
           lp_delay_msg=lp_delay_msg/((double)lp_count_msg);
 
-          if(isnan(hp2hp_delay_msg)){
+          if(std::isnan(hp2hp_delay_msg)){
             hp2hp_delay_msg=-1;
           }
-          if(isnan(hp_delay_msg)){
+          if(std::isnan(hp_delay_msg)){
             hp_delay_msg=-1;
           }
-          if(isnan(lp_delay_msg)){
+          if(std::isnan(lp_delay_msg)){
             lp_delay_msg=-1;
           }
           out3 << it->m_msgId << "," << it->m_txNodeId <<","<< hp2hp_count_msg << ","<< hp_count_msg << "," << lp_count_msg << "," << hp2hp_delay_msg << "," << hp_delay_msg << ","<<lp_delay_msg << std::endl;
@@ -1760,8 +1760,8 @@ void printAppStats(std::string CSVfileName3){
           hp2hp_count_msg=0;
           hp_count_msg=0;
           lp_count_msg=0;
-          hptx_count_msg=0;
-          lptx_count_msg=0;
+          //hptx_count_msg=0;
+          //lptx_count_msg=0;
           hp2hp_delay_msg=0;
           hp_delay_msg=0;
           lp_delay_msg=0;

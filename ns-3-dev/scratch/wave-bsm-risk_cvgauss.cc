@@ -1807,7 +1807,7 @@ CourseChange (std::ostream *os, std::string context, Ptr<const MobilityModel> mo
 
   // Prints position and velocities
   /*
-  for(int i=0;i<m_adhocTxNodes.GetN(); i++){
+  for(unsigned int i=0;i<m_adhocTxNodes.GetN(); i++){
     Ptr<ConstantVelocityMobilityModel> mob = m_adhocTxNodes.Get(i)-> GetObject<ConstantVelocityMobilityModel>();
     Vector posm = mob->GetPosition (); // Get position
     Vector vel = mob->GetVelocity (); // Get velocity
@@ -1827,7 +1827,7 @@ VanetRoutingExperiment::CheckThroughput ()
   uint32_t packetsReceived = m_routingHelper->GetRoutingStats ().GetRxPkts ();
   double kbps = (bytesTotal * 8.0) / 1000;
   double wavePDR = 0.0;
-  double wavePDR_hp = 0.0;
+  //double wavePDR_hp = 0.0;
   int wavePktsSent = m_waveBsmHelper.GetWaveBsmStats ()->GetTxPktCount ();
   int wavePktsReceived = m_waveBsmHelper.GetWaveBsmStats ()->GetRxPktCount ();
 
@@ -1838,7 +1838,7 @@ VanetRoutingExperiment::CheckThroughput ()
       wavePktsReceived = m_waveBsmHelper.GetWaveBsmStats ()->GetRxPktCount ();
       wavePktsReceived_hp = m_waveBsmHelper.GetWaveBsmStats_hp ()->GetRxPktCount ();
       wavePDR = (double) wavePktsReceived / (double) wavePktsSent;
-      wavePDR_hp = (double) wavePktsReceived_hp / (double) wavePktsSent_hp;
+      //wavePDR_hp = (double) wavePktsReceived_hp / (double) wavePktsSent_hp;
     }
 
   int waveExpectedRxPktCount = m_waveBsmHelper.GetWaveBsmStats ()->GetExpectedRxPktCount (1);
@@ -1955,7 +1955,7 @@ VanetRoutingExperiment::CheckThroughput ()
           m_waveBsmHelper.GetWaveBsmStats_hp ()->ResetTotalRxPktCounts (index);
         }
     }
-    for(int i=0;i<m_adhocTxNodes.GetN(); i++){
+    for(unsigned int i=0;i<m_adhocTxNodes.GetN(); i++){
       Ptr<ConstantVelocityMobilityModel> mob = m_adhocTxNodes.Get(i)-> GetObject<ConstantVelocityMobilityModel>();
             //mob->SetVelocity(Vector(var->GetValue (0.0,20.0), var->GetValue (-2.0,2.0), 0.0));
             //mob->SetVelocity(Vector(var->GetValue (0.0,20.0), 0.0, 0.0));
@@ -2310,7 +2310,7 @@ VanetRoutingExperiment::SetupAdhocMobilityNodes ()
       int64_t stream2 = 2;
       var->SetStream (stream);
       var2->SetStream (stream2);
-      for(int i=0;i<m_adhocTxNodes.GetN(); i++){
+      for(unsigned int i=0;i<m_adhocTxNodes.GetN(); i++){
         Ptr<ConstantVelocityMobilityModel> mob = m_adhocTxNodes.Get(i)-> GetObject<ConstantVelocityMobilityModel>();
               //mob->SetVelocity(Vector(var->GetValue (0.0,20.0), var->GetValue (-2.0,2.0), 0.0));
               //mob->SetVelocity(Vector(30+std::sqrt(10)*var->GetValue (), 0.0, 0.0));

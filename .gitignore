@@ -30,9 +30,11 @@
 *.exe
 *.out
 *.app
+*/*.csv
 *.csv
 *.pdf
 *.log
+*.pyc
 bake/
 gnuplot-5.2.2/
 netanim/

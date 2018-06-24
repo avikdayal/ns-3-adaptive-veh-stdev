@@ -1819,7 +1819,7 @@ VanetRoutingExperiment::CheckThroughput ()
   uint32_t packetsReceived = m_routingHelper->GetRoutingStats ().GetRxPkts ();
   double kbps = (bytesTotal * 8.0) / 1000;
   double wavePDR = 0.0;
-  double wavePDR_hp = 0.0;
+  //double wavePDR_hp = 0.0;
   int wavePktsSent = m_waveBsmHelper.GetWaveBsmStats ()->GetTxPktCount ();
   int wavePktsReceived = m_waveBsmHelper.GetWaveBsmStats ()->GetRxPktCount ();
 
@@ -1827,10 +1827,10 @@ VanetRoutingExperiment::CheckThroughput ()
   int wavePktsReceived_hp = m_waveBsmHelper.GetWaveBsmStats_hp ()->GetRxPktCount ();
   if (wavePktsSent > 0)
     {
-      int wavePktsReceived = m_waveBsmHelper.GetWaveBsmStats ()->GetRxPktCount ();
-      int wavePktsReceived_hp = m_waveBsmHelper.GetWaveBsmStats_hp ()->GetRxPktCount ();
+      wavePktsReceived = m_waveBsmHelper.GetWaveBsmStats ()->GetRxPktCount ();
+      wavePktsReceived_hp = m_waveBsmHelper.GetWaveBsmStats_hp ()->GetRxPktCount ();
       wavePDR = (double) wavePktsReceived / (double) wavePktsSent;
-      wavePDR_hp = (double) wavePktsReceived_hp / (double) wavePktsSent_hp;
+      //wavePDR_hp = (double) wavePktsReceived_hp / (double) wavePktsSent_hp;
     }
 
   int waveExpectedRxPktCount = m_waveBsmHelper.GetWaveBsmStats ()->GetExpectedRxPktCount (1);

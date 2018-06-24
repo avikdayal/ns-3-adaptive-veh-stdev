@@ -406,8 +406,8 @@ static void GenerateTraffic(Ptr<Socket> socket, uint32_t pktSize, uint32_t pktCo
 		int node_speed;
 		node_speed = vel.x * vel.x + vel.y * vel.y + vel.z * vel.z;
 		int priority;
-    double react_time;
-    react_time=5;
+    //double react_time;
+    //react_time=5;
 
 		//if (node_speed < (speed_threshold * speed_threshold)) {
     if (node_speed < (speed_threshold * speed_threshold)) {

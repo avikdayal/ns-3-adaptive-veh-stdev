@@ -1097,7 +1097,7 @@ VanetRoutingExperiment::CheckThroughput ()
   int wavePktsReceived = m_waveBsmHelper.GetWaveBsmStats ()->GetRxPktCount ();
   if (wavePktsSent > 0)
     {
-      int wavePktsReceived = m_waveBsmHelper.GetWaveBsmStats ()->GetRxPktCount ();
+      wavePktsReceived = m_waveBsmHelper.GetWaveBsmStats ()->GetRxPktCount ();
       wavePDR = (double) wavePktsReceived / (double) wavePktsSent;
     }
 
