@@ -184,7 +184,7 @@ BsmApplication::BsmApplication ()
     m_chAccessMode (0),
     m_txMaxDelay (MilliSeconds (30)),
     m_prevTxDelay (MilliSeconds (0)),
-    m_prioritytag (1)
+    m_prioritytag (0)
     //m_CSVfileName3("transmit_output.csv")
 {
   NS_LOG_FUNCTION (this);
@@ -1524,15 +1524,18 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
       double temp=var2->GetValue (0.0,3.0);
       if(temp>0.0 && temp<1.0){
         mob_rx->SetPosition(Vector(0, 2.0, posm.z));
-        mob_tx->SetPosition(Vector(0, 6.0, posm.z));
+        //mob_tx->SetPosition(Vector(0, 6.0, posm.z));
+        mob_rx->SetVelocity(Vector(vel_rx.x,0.0,0.0));
       }
       else if(temp>1.0 && temp<2.0){
         mob_rx->SetPosition(Vector(0, 6.0, posm.z));
-        mob_tx->SetPosition(Vector(0, 10.0, posm.z));
+        //mob_tx->SetPosition(Vector(0, 10.0, posm.z));
+        mob_rx->SetVelocity(Vector(vel_rx.x,0.0,0.0));
       }
       else if(temp>2.0 && temp<3.0){
         mob_rx->SetPosition(Vector(0, 10.0, posm.z));
-        mob_tx->SetPosition(Vector(0, 2.0, posm.z));
+        //mob_tx->SetPosition(Vector(0, 2.0, posm.z));
+        mob_rx->SetVelocity(Vector(vel_rx.x,0.0,0.0));
       }
       else{
         std::cout << "error in allocating y position: " << temp << '\n';
