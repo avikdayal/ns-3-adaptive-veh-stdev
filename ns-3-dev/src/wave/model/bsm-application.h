@@ -159,6 +159,7 @@ private:
   double GetAdaptivePriorityLevel(int sendingNodeId);
   double GetAdaptivePriorityLevel(int sendingNodeId, int rxNodeId);
   double GetTTC(int sendingNodeId, int rxNodeId);
+  
   /**
    * \brief Get the node for the desired id
    * \param id the id of the desired node

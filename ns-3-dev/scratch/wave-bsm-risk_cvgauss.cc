@@ -1366,9 +1366,9 @@ VanetRoutingExperiment::VanetRoutingExperiment ()
     m_log (0),
     m_streamIndex (0),
     m_adhocTxNodes (),
-    m_txSafetyRange1 (50.0),
-    m_txSafetyRange2 (100.0),
-    m_txSafetyRange3 (150.0),
+    m_txSafetyRange1 (25.0),
+    m_txSafetyRange2 (50.0),
+    m_txSafetyRange3 (100.0),
     m_txSafetyRange4 (200.0),
     m_txSafetyRange5 (250.0),
     m_txSafetyRange6 (300.0),
@@ -1470,17 +1470,17 @@ static ns3::GlobalValue g_cumulativeBsmCaptureStart ("VRCcumulativeBsmCaptureSta
 
 static ns3::GlobalValue g_txSafetyRange1 ("VRCtxSafetyRange1",
                                           "BSM range for PDR inclusion",
-                                          ns3::DoubleValue (50.0),
+                                          ns3::DoubleValue (25.0),
                                           ns3::MakeDoubleChecker<double> ());
 
 static ns3::GlobalValue g_txSafetyRange2 ("VRCtxSafetyRange2",
                                           "BSM range for PDR inclusion",
-                                          ns3::DoubleValue (100.0),
+                                          ns3::DoubleValue (50.0),
                                           ns3::MakeDoubleChecker<double> ());
 
 static ns3::GlobalValue g_txSafetyRange3 ("VRCtxSafetyRange3",
                                           "BSM range for PDR inclusion",
-                                          ns3::DoubleValue (150.0),
+                                          ns3::DoubleValue (100.0),
                                           ns3::MakeDoubleChecker<double> ());
 
 static ns3::GlobalValue g_txSafetyRange4 ("VRCtxSafetyRange4",
@@ -1792,9 +1792,10 @@ CourseChange (std::ostream *os, std::string context, Ptr<const MobilityModel> mo
 
   int nodeId = mobility->GetObject<Node> ()->GetId ();
   //velocities[nodeId]=vel;
+  /*
   for (std::map <uint32_t, Vector>::iterator it_vel = velocities.begin() ; it_vel != velocities.end(); ++it_vel){
     std::cout << "Node_ID: " << it_vel->first << " Vel: " << it_vel->second <<std::endl;
-  }
+  }*/
   std::cout << "In course change for node " << nodeId <<'\n';
   double t = (Simulator::Now ()).GetSeconds ();
   if (t >= 1.0)
@@ -1806,11 +1807,11 @@ CourseChange (std::ostream *os, std::string context, Ptr<const MobilityModel> mo
   //NS_LOG_UNCOND ("Changing pos for node=" << nodeId << " at " << Simulator::Now () );
 
   // Prints position and velocities
-  /*
-  for(unsigned int i=0;i<m_adhocTxNodes.GetN(); i++){
+
+  /*for(unsigned int i=0;i<m_adhocTxNodes.GetN(); i++){
     Ptr<ConstantVelocityMobilityModel> mob = m_adhocTxNodes.Get(i)-> GetObject<ConstantVelocityMobilityModel>();
     Vector posm = mob->GetPosition (); // Get position
-    Vector vel = mob->GetVelocity (); // Get velocity
+    Vector vel = mobility->GetVelocity (); // Get velocity
     std::cout << Simulator::Now () << " Node: " << i << " POS: x=" << posm.x << ", y=" << posm.y << ", z=" << posm.z << "; VEL:" << vel.x << ", y=" << vel.y  << ", z=" << vel.z << std::endl;
   }*/
   std::cout << Simulator::Now () << " POS: x=" << pos.x << ", y=" << pos.y << ", z=" << pos.z << "; VEL:" << vel.x << ", y=" << vel.y << ", z=" << vel.z << std::endl;
@@ -1963,8 +1964,9 @@ VanetRoutingExperiment::CheckThroughput ()
       Vector posm = mob->GetPosition (); // Get position
       Vector vel = mob->GetVelocity (); // Get velocity
       if(posm.x>2000){
-          mob->SetPosition(Vector(0.0, posm.y, posm.z));
-          mob->SetVelocity(velocities[i]);
+          mob->SetPosition(Vector(posm.x-2000.00, posm.y, posm.z));
+          //mob->SetVelocity(velocities[i]);
+          mob->SetVelocity(vel);
           //m_streamIndex += mobilityAdhoc.AssignStreams (m_adhocTxNodes, m_streamIndex);
           WaveBsmHelper::GetNodesMoving ().resize (m_nNodes, 1);
           //WaveBsmHelper::GetNodesMoving ()[i] = 1;
@@ -2140,9 +2142,9 @@ void
 VanetRoutingExperiment::CommandSetup (int argc, char **argv)
 {
   CommandLine cmd;
-  double txDist1 = 50.0;
-  double txDist2 = 100.0;
-  double txDist3 = 150.0;
+  double txDist1 = 25.0;
+  double txDist2 = 50.0;
+  double txDist3 = 100.0;
   double txDist4 = 200.0;
   double txDist5 = 250.0;
   double txDist6 = 300.0;
@@ -2317,25 +2319,26 @@ VanetRoutingExperiment::SetupAdhocMobilityNodes ()
               //Vector node_vel=Vector(var->GetValue (0.0,35.0), 0.0, 0.0);
         Vector posm = mob->GetPosition (); // Get position
         double temp=var2->GetValue (0.0,3.0);
-        if(temp>0.0 && temp<1.0){
+        if(temp>=0.0 && temp<1.0){
           mob->SetPosition(Vector(posm.x, 2.0, posm.z));
         }
-        else if(temp>1.0 && temp<2.0){
+        else if(temp>=1.0 && temp<2.0){
           mob->SetPosition(Vector(posm.x, 6.0, posm.z));
         }
-        else if(temp>2.0 && temp<3.0){
+        else if(temp>=2.0 && temp<3.0){
           mob->SetPosition(Vector(posm.x, 10.0, posm.z));
         }
         else{
           std::cout << "error in allocating y position: " << temp << '\n';
         }
 
-        Vector node_vel=Vector(30+std::sqrt(10)*var->GetValue (), 0.0, 0.0);
+        Vector node_vel=Vector(30+std::sqrt(5)*var->GetValue (), 0.0, 0.0);
+        //Vector node_vel=Vector(30+0.5*var->GetValue (), 0.0, 0.0);
         mob->SetVelocity(node_vel);
         velocities[i]=node_vel;
         posm = mob->GetPosition (); // Get position
         Vector vel = mob->GetVelocity (); // Get velocity
-        std::cout << Simulator::Now () << " POS: x=" << posm.x << ", y=" << posm.y << ", z=" << posm.z << "; VEL:" << vel.x << ", y=" << vel.y  << ", z=" << vel.z << std::endl;
+        std::cout << Simulator::Now () << " Node: " << i << " POS: x=" << posm.x << ", y=" << posm.y << ", z=" << posm.z << "; VEL:" << vel.x << ", y=" << vel.y  << ", z=" << vel.z << std::endl;
       }
 
 
