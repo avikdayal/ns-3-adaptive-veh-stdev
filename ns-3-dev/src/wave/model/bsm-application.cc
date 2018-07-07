@@ -1500,6 +1500,7 @@ void BsmApplication::ReceiveAdaptiveWavePacket (Ptr<Socket> socket)
     }
 }
 
+
 void BsmApplication::HandleReceivedBsmPacket (Ptr<Node> txNode,
                                               Ptr<Node> rxNode)
 {
