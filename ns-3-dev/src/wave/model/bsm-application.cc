@@ -1487,10 +1487,10 @@ void BsmApplication::ReceiveAdaptiveWavePacket (Ptr<Socket> socket)
 
 
                   if(m_prioritytag){
-                    HandleAdaptivePriorityReceivedBsmPacket (txNode, rxNode, txNodeId, rxNode->GetId ());
+                    HandleAdaptivePriorityReceivedBsmPacket (txNode, rxNode, txNodeId, rxNode->GetId (), tag.GetPrio());
                   }
                   else{
-                    HandleAdaptivePriorityReceivedBsmPacket (txNode, rxNode, txNodeId, rxNode->GetId ());
+                    HandleAdaptivePriorityReceivedBsmPacket (txNode, rxNode, txNodeId, rxNode->GetId (), tag.GetPrio());
                     //HandleReceivedBsmPacket (txNode, rxNode);
                   }
 
@@ -1593,13 +1593,13 @@ void BsmApplication::HandlePriorityReceivedBsmPacket (Ptr<Node> txNode,
     }
 }
 void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
-                                              Ptr<Node> rxNode, int txNodeId, int rxNodeId)
+                                              Ptr<Node> rxNode, int txNodeId, int rxNodeId, double prio)
 {
   NS_LOG_FUNCTION (this);
   //std::cout << "the second one is being used" << '\n';
   double priority;
   //int priority_hp;
-  priority=GetAdaptivePriorityLevel(txNodeId);
+  priority=prio; //GetAdaptivePriorityLevel(txNodeId);
   double priority_threshold=5.0;
   double priority_rxtx;
   priority_rxtx=GetAdaptivePriorityLevel(txNodeId,rxNodeId);
