@@ -2332,7 +2332,7 @@ VanetRoutingExperiment::SetupAdhocMobilityNodes ()
           std::cout << "error in allocating y position: " << temp << '\n';
         }
 
-        Vector node_vel=Vector(30+std::sqrt(5)*var->GetValue (), 0.0, 0.0);
+        Vector node_vel=Vector(30+std::sqrt(16)*var->GetValue (), 0.0, 0.0);
         //Vector node_vel=Vector(30+0.5*var->GetValue (), 0.0, 0.0);
         mob->SetVelocity(node_vel);
         velocities[i]=node_vel;

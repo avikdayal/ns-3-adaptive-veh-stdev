@@ -155,6 +155,7 @@ const int m_lane_num = 3;
 double highwaylength=2000;
 //int crashes=0;
 static std::atomic<int> crashes(0);
+static std::atomic<int> manuevers(0);
 //static std::atomic<int> MsgId(0);
 // (Arbitrary) port for establishing socket to transmit WAVE BSMs
 int BsmApplication::wavePort = 9080;
@@ -900,7 +901,7 @@ BsmApplication::GeneratePriorityWaveTraffic (Ptr<Socket> socket, uint32_t pktSiz
                           // dest node within range?
                           //todo: int base = (prio == 1) ? 0 : 10;
                           int min_interval=100;
-//#define ADAPTIVE_PRIO
+#define ADAPTIVE_PRIO
 #ifdef ADAPTIVE_PRIO
                           int max_interval=1000;
                           int max_priority=5;
@@ -1631,6 +1632,7 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
   if(priority_rxtx>=priority_threshold){
 
     if(vel_tx.x<=vel_rx.x){
+      manuevers++;
       std::cout << "*About to change Velocity: " << " priority: "<< priority_rxtx << Simulator::Now () << " rxNode: " << rxNodeId << " txNode: " << txNodeId << " POSx: " << posm_rx.x << " POSy: " << posm_rx.y << " POSTXx: " << posm_rx.x << " POSTXy: " << posm_rx.y << "vel_rx: " << vel_rx.x << " vel_tx: " << vel_tx.x << " priority: "<< priority_rxtx <<'\n';
       //std::cout << Simulator::Now () << " rxNode: " << rxNodeId <<" POS: x=" << posm_rx.x << ", y=" << posm_rx.y << ", z=" << posm_rx.z << "vel_rx: " << vel_rx.x << " vel_tx: " << vel_tx.x << " priority: "<< priority_rxtx <<'\n';
       if((vel_rx.x-vel_tx.x)>5 && (posm_rx.x<posm_tx.x)){
@@ -1848,7 +1850,7 @@ void printAppStats(std::string CSVfileName3){
   double lp_delay_msg=0;
 
   double min_ttc;
-
+  std::cout << "total crashes: " << crashes << " manuevers: " << manuevers << '\n';
   //std::map <uint32_t, PacketInfo *> hp_Vehiclelist;
   std::map <std::string, PacketInfo *> PacketListIndex;
 
