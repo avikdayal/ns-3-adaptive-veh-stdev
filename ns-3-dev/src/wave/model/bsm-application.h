@@ -151,7 +151,7 @@ private:
   void HandleReceivedBsmPacket (Ptr<Node> txNode,
                                 Ptr<Node> rxNode);
   void HandlePriorityReceivedBsmPacket (Ptr<Node> txNode,
-                                Ptr<Node> rxNode, int txNodeId,int rxNodeId);
+                                Ptr<Node> rxNode, int txNodeId,int rxNodeId, double prio);
   void HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
                                 Ptr<Node> rxNode, int txNodeId,int rxNodeId);
   int GetPriorityLevel(int sendingNodeId);

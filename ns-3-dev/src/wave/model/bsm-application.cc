@@ -702,9 +702,9 @@ BsmApplication::GenerateWaveTraffic (Ptr<Socket> socket, uint32_t pktSize,
                             // dest node within range?
                             //todo: int base = (prio == 1) ? 0 : 10;
                             int min_interval=100;
-                            int max_interval=1000;
-                            int max_priority=5;
-                            int min_priority=1;
+                            //int max_interval=1000;
+                            //int max_priority=5;
+                            //int min_priority=1;
                             int rangeCount = m_txSafetyRangesSq.size ();
                             for (int index = 1; index <= rangeCount; index++)
                               {
@@ -721,8 +721,8 @@ BsmApplication::GenerateWaveTraffic (Ptr<Socket> socket, uint32_t pktSize,
                                     else if(priority>1){
                                       //m_waveBsmStats_hp->IncExpectedRxPktCount (index);
                                       m_waveBsmStats->IncExpectedRxPktCount (index);
-                                      int pkt_time;
-                                      pkt_time=max_interval+(max_interval - min_interval)/(max_priority - min_priority) -priority* (max_interval - min_interval)/(max_priority- min_priority);
+                                      //int pkt_time;
+                                      //pkt_time=max_interval+(max_interval - min_interval)/(max_priority - min_priority) -priority* (max_interval - min_interval)/(max_priority- min_priority);
                                       pktInterval=MilliSeconds (100);
                                     }
                                     else{
@@ -900,9 +900,12 @@ BsmApplication::GeneratePriorityWaveTraffic (Ptr<Socket> socket, uint32_t pktSiz
                           // dest node within range?
                           //todo: int base = (prio == 1) ? 0 : 10;
                           int min_interval=100;
+//#define ADAPTIVE_PRIO
+#ifdef ADAPTIVE_PRIO
                           int max_interval=1000;
                           int max_priority=5;
                           int min_priority=1;
+#endif
                           int rangeCount = m_txSafetyRangesSq.size ();
                           for (int index = 1; index <= rangeCount; index++)
                             {
@@ -919,10 +922,10 @@ BsmApplication::GeneratePriorityWaveTraffic (Ptr<Socket> socket, uint32_t pktSiz
                                   else if(priority>1){
                                     //m_waveBsmStats_hp->IncExpectedRxPktCount (index);
                                     m_waveBsmStats->IncExpectedRxPktCount (index);
+
+#ifdef ADAPTIVE_PRIO
                                     int pkt_time;
                                     pkt_time=max_interval+(max_interval - min_interval)/(max_priority - min_priority) -priority* (max_interval - min_interval)/(max_priority- min_priority);
-#define ADAPTIVE_PRIO
-#ifdef ADAPTIVE_PRIO
                                     //std::cout << "In adaptive prio" << '\n';
                                     pktInterval=MilliSeconds (pkt_time);
 #else
@@ -1289,8 +1292,8 @@ double BsmApplication::GetTTC(int sendingNodeId, int rxNodeId)
   NS_ASSERT (txPosition != 0);
   Vector posm_tx = txPosition->GetPosition(); // Get velocity
   Vector vel = txPosition->GetVelocity(); // Get velocity
-  double node_speed;
-  node_speed = vel.x * vel.x + vel.y * vel.y + vel.z * vel.z;
+//  double node_speed;
+//  node_speed = vel.x * vel.x + vel.y * vel.y + vel.z * vel.z;
   int senderMoving = m_nodesMoving->at (txNodeId);
   double ttc=0;//time to collision
   if (senderMoving != 0)
@@ -1304,8 +1307,8 @@ double BsmApplication::GetTTC(int sendingNodeId, int rxNodeId)
               NS_ASSERT (rxPosition != 0);
               Vector vel_rx = rxPosition->GetVelocity(); // Get velocity
               Vector posm_rx = rxPosition->GetPosition(); // Get position
-              double node_speed_rx;
-              node_speed_rx = vel_rx.x * vel_rx.x + vel_rx.y * vel_rx.y + vel_rx.z * vel_rx.z;
+            //  double node_speed_rx;
+             // node_speed_rx = vel_rx.x * vel_rx.x + vel_rx.y * vel_rx.y + vel_rx.z * vel_rx.z;
               //double rel_vel=(std::abs(node_speed-node_speed_rx));
               //double rel_vel=(std::abs(vel_rx.x-vel.x));
               double rel_vel=(vel_rx.x-vel.x);
@@ -1394,7 +1397,7 @@ void BsmApplication::ReceiveWavePacket (Ptr<Socket> socket)
 
 
                   if(m_prioritytag){
-                    HandlePriorityReceivedBsmPacket (txNode, rxNode, txNodeId, rxNode->GetId ());
+                    HandlePriorityReceivedBsmPacket (txNode, rxNode, txNodeId, rxNode->GetId (), tag.GetPrio());
                   }
                   else{
                     HandleReceivedBsmPacket (txNode, rxNode);
@@ -1534,13 +1537,13 @@ void BsmApplication::HandleReceivedBsmPacket (Ptr<Node> txNode,
     }
 }
 void BsmApplication::HandlePriorityReceivedBsmPacket (Ptr<Node> txNode,
-                                              Ptr<Node> rxNode, int txNodeId, int rxNodeId)
+                                              Ptr<Node> rxNode, int txNodeId, int rxNodeId, double prio)
 {
   NS_LOG_FUNCTION (this);
   std::cout << "in priority received bsm class(for 2 class packets)" << '\n';
   int priority;
   //int priority_hp;
-  priority=GetPriorityLevel(txNodeId);
+  priority= prio; //=GetPriorityLevel(txNodeId);
   //priority_hp=GetPriorityLevel(txNodeId,rxNodeId);
   if(priority>=5){
     m_waveBsmStats_hp->IncRxPktCount ();
@@ -1710,7 +1713,7 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
         }
         free_lane_veh[vehc_min+1]=highwaylength;
         //free_lane_veh.push_back(highwaylength);
-        std::sort(free_lane_veh.begin(),free_lane_veh.end());
+//        std::sort(free_lane_veh.begin(),free_lane_veh.end());
         //std::sort(free_lane_veh,free_lane_veh+temp_min);
         int temp_max=0;
         int temp_max_ind=0;
@@ -1830,14 +1833,14 @@ void printAppStats(std::string CSVfileName3){
   double lp_delay=0;
   int hptx_count=0;
   int lptx_count=0;
-  int tempID=0;
+  unsigned int tempID=0;
 
-  int tempID_msg=0;
+  unsigned int tempID_msg=0;
   int hp2hp_count_msg=0;
   int hp_count_msg=0;
   int lp_count_msg=0;
-  int hptx_count_msg=0;
-  int lptx_count_msg=0;
+//  int hptx_count_msg=0;
+//  int lptx_count_msg=0;
 
   double hp2hp_delay_msg=0;
   double hp_delay_msg=0;
@@ -1881,13 +1884,13 @@ void printAppStats(std::string CSVfileName3){
           hp_delay_msg=hp_delay_msg/((double)hp_count_msg);
           lp_delay_msg=lp_delay_msg/((double)lp_count_msg);
 
-          if(isnan(hp2hp_delay_msg)){
+          if(std::isnan(hp2hp_delay_msg)){
             hp2hp_delay_msg=-1;
           }
-          if(isnan(hp_delay_msg)){
+          if(std::isnan(hp_delay_msg)){
             hp_delay_msg=-1;
           }
-          if(isnan(lp_delay_msg)){
+          if(std::isnan(lp_delay_msg)){
             lp_delay_msg=-1;
           }
           out3 << (*it)->m_msgId << "," << (*it)->m_txNodeId <<","<< hp2hp_count_msg << ","<< hp_count_msg << "," << lp_count_msg << "," << hp2hp_delay_msg << "," << hp_delay_msg << ","<<lp_delay_msg << std::endl;
@@ -1895,8 +1898,8 @@ void printAppStats(std::string CSVfileName3){
           hp2hp_count_msg=0;
           hp_count_msg=0;
           lp_count_msg=0;
-          hptx_count_msg=0;
-          lptx_count_msg=0;
+//          hptx_count_msg=0;
+ //         lptx_count_msg=0;
           hp2hp_delay_msg=0;
           hp_delay_msg=0;
           lp_delay_msg=0;
@@ -1941,13 +1944,13 @@ void printAppStats(std::string CSVfileName3){
           hp_delay_msg=hp_delay_msg/((double)hp_count_msg);
           lp_delay_msg=lp_delay_msg/((double)lp_count_msg);
 
-          if(isnan(hp2hp_delay_msg)){
+          if(std::isnan(hp2hp_delay_msg)){
             hp2hp_delay_msg=-1;
           }
-          if(isnan(hp_delay_msg)){
+          if(std::isnan(hp_delay_msg)){
             hp_delay_msg=-1;
           }
-          if(isnan(lp_delay_msg)){
+          if(std::isnan(lp_delay_msg)){
             lp_delay_msg=-1;
           }
           out3 << (*it)->m_msgId << "," << (*it)->m_txNodeId <<","<< hp2hp_count_msg << ","<< hp_count_msg << "," << lp_count_msg << "," << hp2hp_delay_msg << "," << hp_delay_msg << ","<<lp_delay_msg << std::endl;
@@ -1955,8 +1958,8 @@ void printAppStats(std::string CSVfileName3){
           hp2hp_count_msg=0;
           hp_count_msg=0;
           lp_count_msg=0;
-          hptx_count_msg=0;
-          lptx_count_msg=0;
+//          hptx_count_msg=0;
+//          lptx_count_msg=0;
           hp2hp_delay_msg=0;
           hp_delay_msg=0;
           lp_delay_msg=0;
@@ -1984,11 +1987,11 @@ void printAppStats(std::string CSVfileName3){
   out3.close ();
 
 
-  int hp_counti=0;
+//  int hp_counti=0;
   int dropped_packets=0;
   std::map<uint32_t, PacketInfo *> Nodes_dropped;//=it_hp->second->NodesInRange;
   for (std::map< uint32_t, PacketInfo *>::iterator it_hp = hp_PacketList.begin() ; it_hp != hp_PacketList.end(); ++it_hp){
-    hp_counti=it_hp->second->m_msgId;
+//    hp_counti=it_hp->second->m_msgId;
     //int sz = hp_PacketList[hp_counti]->NodesInRange.size();
     int sz = it_hp->second->NodesInRange.size();
     if(sz>0){

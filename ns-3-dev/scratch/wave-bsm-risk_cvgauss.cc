@@ -1888,7 +1888,7 @@ VanetRoutingExperiment::CheckThroughput ()
     {
       NS_LOG_UNCOND ("At t=" << (Simulator::Now ()).GetSeconds () << "s BSM_PDR1=" << wavePDR1_2 << " BSM_PDR1=" << wavePDR2_2 << " BSM_PDR3=" << wavePDR3_2 << " BSM_PDR4=" << wavePDR4_2 << " BSM_PDR5=" << wavePDR5_2 << " BSM_PDR6=" << wavePDR6_2 << " BSM_PDR7=" << wavePDR7_2 << " BSM_PDR8=" << wavePDR8_2 << " BSM_PDR9=" << wavePDR9_2 << " BSM_PDR10=" << wavePDR10_2 << " Goodput=" << kbps << "Kbps" /*<< " MAC/PHY-OH=" << mac_phy_oh*/);
 
-      NS_LOG_UNCOND ("At t=" << (Simulator::Now ()).GetSeconds () << "s BSM_PDR1_hp=" << wavePDR1_2_hp << " BSM_PDR2=" << wavePDR2_2_hp << " BSM_PDR3=" << wavePDR3_2_hp << " BSM_PDR4=" << wavePDR4_2_hp << " BSM_PDR5=" << wavePDR5_2_hp << " BSM_PDR6=" << wavePDR6_2_hp << " BSM_PDR7=" << wavePDR7_2_hp << " BSM_PDR8=" << wavePDR8_2_hp << " BSM_PDR9=" << wavePDR9_2_hp << " BSM_PDR10=" << wavePDR10_2_hp << " Goodput=" << kbps << "Kbps" /*<< " MAC/PHY-OH=" << mac_phy_oh*/);
+      NS_LOG_UNCOND ("HP t=" << (Simulator::Now ()).GetSeconds () << "s BSM_PDR1_hp=" << wavePDR1_2_hp << " BSM_PDR2=" << wavePDR2_2_hp << " BSM_PDR3=" << wavePDR3_2_hp << " BSM_PDR4=" << wavePDR4_2_hp << " BSM_PDR5=" << wavePDR5_2_hp << " BSM_PDR6=" << wavePDR6_2_hp << " BSM_PDR7=" << wavePDR7_2_hp << " BSM_PDR8=" << wavePDR8_2_hp << " BSM_PDR9=" << wavePDR9_2_hp << " BSM_PDR10=" << wavePDR10_2_hp << " Goodput=" << kbps << "Kbps" /*<< " MAC/PHY-OH=" << mac_phy_oh*/);
     }
 
   out << (Simulator::Now ()).GetSeconds () << ","

@@ -35,5 +35,9 @@ TAGS
 
 build-dir/
 build/
+src/.cproject
+src/.project
 /.cproject
 /.project
+
+
