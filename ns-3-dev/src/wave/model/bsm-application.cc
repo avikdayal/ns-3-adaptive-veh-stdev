@@ -901,7 +901,7 @@ BsmApplication::GeneratePriorityWaveTraffic (Ptr<Socket> socket, uint32_t pktSiz
                           // dest node within range?
                           //todo: int base = (prio == 1) ? 0 : 10;
                           int min_interval=100;
-#define ADAPTIVE_PRIO
+//#define ADAPTIVE_PRIO
 #ifdef ADAPTIVE_PRIO
                           int max_interval=1000;
                           int max_priority=5;
@@ -1595,194 +1595,109 @@ void BsmApplication::HandlePriorityReceivedBsmPacket (Ptr<Node> txNode,
     }
 }
 void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
-                                              Ptr<Node> rxNode, int txNodeId, int rxNodeId, double prio)
+		Ptr<Node> rxNode, int txNodeId, int rxNodeId, double prio)
 {
-  NS_LOG_FUNCTION (this);
-  //std::cout << "the second one is being used" << '\n';
-  double priority;
-  //int priority_hp;
-  priority=prio; //GetAdaptivePriorityLevel(txNodeId);
-  double priority_threshold=5.0;
-  double priority_rxtx;
-  priority_rxtx=GetAdaptivePriorityLevel(txNodeId,rxNodeId);
-  /*if(priority>=priority_threshold){
+	NS_LOG_FUNCTION (this);
+	//std::cout << "the second one is being used" << '\n';
+	double priority;
+	//int priority_hp;
+	priority=prio; //GetAdaptivePriorityLevel(txNodeId);
+	double priority_threshold=5.0;
+	double priority_rxtx;
+	priority_rxtx=GetAdaptivePriorityLevel(txNodeId,rxNodeId);
+	/*if(priority>=priority_threshold){
     m_waveBsmStats_hp->IncRxPktCount ();
   }*/
-  if(priority>=priority_threshold){
-    m_waveBsmStats_hp->IncRxPktCount ();
-  }
-  else{
-    m_waveBsmStats->IncRxPktCount ();
-  }
-  Ptr<MobilityModel> rxPosition = rxNode->GetObject<MobilityModel> ();
-  /*
+	if(priority>=priority_threshold){
+		m_waveBsmStats_hp->IncRxPktCount ();
+	}
+	else{
+		m_waveBsmStats->IncRxPktCount ();
+	}
+	Ptr<MobilityModel> rxPosition = rxNode->GetObject<MobilityModel> ();
+	/*
   if(priority_hp==5){
     m_waveBsmStats_hp->IncRxPktCount ();
   }*/
-  /*new code*/
-  //static std::atomic<int> crashes(0);
-  Ptr<ConstantVelocityMobilityModel> mob_tx = txNode-> GetObject<ConstantVelocityMobilityModel>();
-  Ptr<ConstantVelocityMobilityModel> mob_rx = rxNode-> GetObject<ConstantVelocityMobilityModel>();
-  NS_ASSERT(mob_tx);
-  NS_ASSERT(mob_rx);
-  Vector posm_rx = mob_rx->GetPosition (); // Get position
-  Vector vel_rx = mob_rx->GetVelocity (); // Get velocity
-  Vector posm_tx = mob_tx->GetPosition (); // Get position
-  Vector vel_tx = mob_tx->GetVelocity (); // Get velocity
-  if(priority_rxtx>=priority_threshold){
+	/*new code*/
+	//static std::atomic<int> crashes(0);
+	Ptr<ConstantVelocityMobilityModel> mob_tx = txNode-> GetObject<ConstantVelocityMobilityModel>();
+	Ptr<ConstantVelocityMobilityModel> mob_rx = rxNode-> GetObject<ConstantVelocityMobilityModel>();
+	NS_ASSERT(mob_tx);
+	NS_ASSERT(mob_rx);
+	Vector posm_rx = mob_rx->GetPosition (); // Get position
+	Vector vel_rx = mob_rx->GetVelocity (); // Get velocity
+	Vector posm_tx = mob_tx->GetPosition (); // Get position
+	Vector vel_tx = mob_tx->GetVelocity (); // Get velocity
+	double temp_ttc=GetTTC(txNodeId,rxNodeId);
+	double crash_thres=5.0;
+	if(((temp_ttc<crash_thres) && (std::abs(posm_rx.y-posm_tx.y)<=m_lane_thres) && (posm_rx.x <= posm_tx.x) && (vel_rx.x > vel_tx.x)) ||
+	   ((temp_ttc<crash_thres) && (std::abs(posm_rx.y-posm_tx.y)<=m_lane_thres) && (posm_tx.x <= posm_rx.x) && (vel_tx.x > vel_rx.x)))
+	{
+		crashes++;
+		std::cout << "crash occurred" << crashes << " Time: " << Simulator::Now().GetMilliSeconds () << " rxNode: " << rxNodeId << " txNode: " << txNodeId << " POSRX: x=" << posm_rx.x << ", y=" << posm_rx.y << " POSTX: x=" << posm_tx.x << ", y=" << posm_tx.y << "vel_rx: " << vel_rx.x << "  vel_tx: " << vel_tx.x << " priority: "<< priority_rxtx << " ttc: " << temp_ttc <<'\n';
+		//std::cout << "difference in y positions: " << std::abs(posm_tx.y-posm_rx.y) << " lane thres: "<< m_lane_thres <<'\n';
+		//mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
+		mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
+		mob_tx->SetVelocity(Vector(vel_rx.x,0.0,0.0));
+	}
+	else if(priority_rxtx>=priority_threshold){
 
-    if(vel_tx.x<=vel_rx.x){
-      manuevers++;
-      std::cout << "*About to change Velocity: " << " priority: "<< priority_rxtx << Simulator::Now () << " rxNode: " << rxNodeId << " txNode: " << txNodeId << " POSx: " << posm_rx.x << " POSy: " << posm_rx.y << " POSTXx: " << posm_rx.x << " POSTXy: " << posm_rx.y << "vel_rx: " << vel_rx.x << " vel_tx: " << vel_tx.x << " priority: "<< priority_rxtx <<'\n';
-      //std::cout << Simulator::Now () << " rxNode: " << rxNodeId <<" POS: x=" << posm_rx.x << ", y=" << posm_rx.y << ", z=" << posm_rx.z << "vel_rx: " << vel_rx.x << " vel_tx: " << vel_tx.x << " priority: "<< priority_rxtx <<'\n';
-      if((vel_rx.x-vel_tx.x)>5 && (posm_rx.x<posm_tx.x)){
-        //mob_rx->SetVelocity(Vector(vel_rx.x-5,0.0,0.0));
-        mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
-        std::cout << " greater than 5: " <<'\n';
-        mob_tx->SetVelocity(Vector(vel_rx.x,0.0,0.0));
-      }
-      else{
-        mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
-        mob_tx->SetVelocity(Vector(vel_rx.x,0.0,0.0));
-        //mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
-      }
+		if(vel_tx.x<vel_rx.x){
+			manuevers++;
+			std::cout << "*About to change Velocity: " << " priority: "<< priority_rxtx << Simulator::Now () << " rxNode: " << rxNodeId << " txNode: " << txNodeId << " POSx: " << posm_rx.x << " POSy: " << posm_rx.y << " POSTXx: " << posm_rx.x << " POSTXy: " << posm_rx.y << "vel_rx: " << vel_rx.x << " vel_tx: " << vel_tx.x << " priority: "<< priority_rxtx <<'\n';
+			//std::cout << Simulator::Now () << " rxNode: " << rxNodeId <<" POS: x=" << posm_rx.x << ", y=" << posm_rx.y << ", z=" << posm_rx.z << "vel_rx: " << vel_rx.x << " vel_tx: " << vel_tx.x << " priority: "<< priority_rxtx <<'\n';
+			mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
+			mob_tx->SetVelocity(Vector(vel_rx.x,0.0,0.0));
+			//mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
+		}
+	}
+	else{
+		if(priority_rxtx>1){
+			//std::cout <<"*LPNODE: "<< Simulator::Now () << " rxNode: " << rxNodeId <<" POS: x=" << posm_rx.x << ", y=" << posm_rx.y << ", z=" << posm_rx.z << "vel_rx: " << vel_rx.x << " vel_tx: " << vel_tx.x << " priority: "<< priority_rxtx <<'\n';
+		}
 
-    }
-  }
+	}
 
-  else{
-    if(priority_rxtx>1){
-          //std::cout <<"*LPNODE: "<< Simulator::Now () << " rxNode: " << rxNodeId <<" POS: x=" << posm_rx.x << ", y=" << posm_rx.y << ", z=" << posm_rx.z << "vel_rx: " << vel_rx.x << " vel_tx: " << vel_tx.x << " priority: "<< priority_rxtx <<'\n';
-    }
 
-  }
-    //New Lane changing code
-      //End of New Lane changing code
-    double temp_ttc=GetTTC(txNodeId,rxNodeId);
-    double crash_thres=6;
-    if((temp_ttc<crash_thres) && (std::abs(posm_rx.y-posm_tx.y)<=m_lane_thres) && (posm_rx.x<posm_tx.x))
-    {
-      crashes++;
-      std::cout << "crash occurred" << crashes << " Time: " << Simulator::Now().GetMilliSeconds () << " rxNode: " << rxNodeId << " txNode: " << txNodeId << " POSRX: x=" << posm_rx.x << ", y=" << posm_rx.y << " POSTX: x=" << posm_tx.x << ", y=" << posm_tx.y << "vel_rx: " << vel_rx.x << "  vel_tx: " << vel_tx.x << " priority: "<< priority_rxtx << " ttc: " << temp_ttc <<'\n';
-      int open_lane_code=0;
-      //std::cout << "difference in y positions: " << std::abs(posm_tx.y-posm_rx.y) << " lane thres: "<< m_lane_thres <<'\n';
-      //mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
-      if(open_lane_code){
-        std::cout << "entering lane changing code" << std::endl;
-        Ptr<UniformRandomVariable> var2 = CreateObject<UniformRandomVariable> ();
-        int64_t stream2 = 2;
-        var2->SetStream (stream2);
-        Vector posm = mob_rx->GetPosition (); // Get position
-
-        int veh_count[m_lane_num]={};
-        //std::vector<int> veh_count;
-        //std::map<int, int> veh_count;
-        int nodes = m_adhocTxInterfaces->GetN ();
-        std::map<std::string, double> veh_pos;
-        for (int i = 0; i < nodes; i++){
-          for(int lane_it=0;lane_it<m_lane_num;lane_it++){
-            Ptr<Node> Node_i = GetNode (i);
-            Ptr<MobilityModel> Node_mob_i = Node_i->GetObject<MobilityModel> ();
-            Vector Node_pos_i = Node_mob_i->GetPosition(); // Get velocity
-            if(i!=rxNodeId){
-              if(Node_pos_i.y == lane_ypos[lane_it]){
-
-                veh_count[lane_it]++;
-                std::stringstream ss;
-                ss << lane_it  << '-' << veh_count[lane_it];
-                veh_pos[ss.str()]=Node_pos_i.x;
-
-              }
-            }
-          }
-        }
-        int vehc_min=10000;
-        int temp_min_ind=0;
-        for(int lane_it=0;lane_it<m_lane_num;lane_it++){
-          if(veh_count[lane_it]<vehc_min){
-            temp_min_ind=lane_it;
-            vehc_min=veh_count[lane_it];
-          }
-        }
-        std::vector<double> free_lane_veh (vehc_min+2);//vector of positions for lane 1
-        //double free_lane_veh[vehc_min+2]={};
-        free_lane_veh[0]=0.0;
-        //free_lane_veh.push_back(0);
-        for (int i = 0; i < vehc_min; i++){
-          std::stringstream ss;
-          ss << temp_min_ind  << '-' << i;
-          //free_lane_veh.push_back(veh_pos[ss.str()]);
-          free_lane_veh[i+1]=veh_pos[ss.str()];
-        }
-        free_lane_veh[vehc_min+1]=highwaylength;
-        //free_lane_veh.push_back(highwaylength);
-//        std::sort(free_lane_veh.begin(),free_lane_veh.end());
-        //std::sort(free_lane_veh,free_lane_veh+temp_min);
-        int temp_max=0;
-        int temp_max_ind=0;
-        for(int i = 0; i < vehc_min-1; i++){
-          if((free_lane_veh[i+1]-free_lane_veh[i])>temp_max){
-            temp_max=free_lane_veh[i+1]-free_lane_veh[i];
-            temp_max_ind=i;
-          }
-
-        }
-        /*
-        for (std::vector<double>::iterator it = free_lane_veh.begin() ; it != free_lane_veh.end(); ++it){
-          if(*(it+1)-free_lane_veh[i])>temp_max){
-            temp_max=free_lane_veh[i+1]-free_lane_veh[i];
-            temp_max_ind=i;
-          }
-        }*/
-        int free_space=(free_lane_veh[temp_max_ind]+free_lane_veh[temp_max_ind+1])/2;
-        mob_rx->SetPosition(Vector(free_space, temp_min_ind, posm.z));
-        mob_rx->SetVelocity(Vector(vel_rx.x,0.0,0.0));
-      }
-      else{
-
-          mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
-          mob_tx->SetVelocity(Vector(vel_rx.x,0.0,0.0));
-
-      }
-
-    }
-
-  NS_ASSERT (rxPosition != 0);
-  // confirm that the receiving node
-  // has also started moving in the scenario
-  // if it has not started moving, then
-  // it is not a candidate to receive a packet
-  //int rxNodeId = rxNode->GetId ();
-  int receiverMoving = m_nodesMoving->at (rxNodeId);
-  if (receiverMoving == 1)
-    {
-      double rxDistSq = MobilityHelper::GetDistanceSquaredBetween (rxNode, txNode);
-      //std::cout << "Receiver Distance between nodes " << rxDistSq <<'\n';
-      //todo: int prio = getPrio(txNode);
-      //todo: int base = (prio == 1) ? 0 : 10;
-      //NS_LOG_UNCOND ("Time "<<(Simulator::Now()).GetSeconds()<<" tx velocity" << txPosition->GetVelocity());
-      if (rxDistSq > 0.0)
-        {
-          int rangeCount = m_txSafetyRangesSq.size ();
-          for (int index = 1; index <= rangeCount; index++)
-            {
-              if (rxDistSq <= m_txSafetyRangesSq[index - 1])
-                {
-                  //todo: pass index + base
-                  if(priority>=priority_threshold){
-                    m_waveBsmStats_hp->IncRxPktInRangeCount (index);
-                  }/*
+	NS_ASSERT (rxPosition != 0);
+	// confirm that the receiving node
+	// has also started moving in the scenario
+	// if it has not started moving, then
+	// it is not a candidate to receive a packet
+	//int rxNodeId = rxNode->GetId ();
+	int receiverMoving = m_nodesMoving->at (rxNodeId);
+	if (receiverMoving == 1)
+	{
+		double rxDistSq = MobilityHelper::GetDistanceSquaredBetween (rxNode, txNode);
+		//std::cout << "Receiver Distance between nodes " << rxDistSq <<'\n';
+		//todo: int prio = getPrio(txNode);
+		//todo: int base = (prio == 1) ? 0 : 10;
+		//NS_LOG_UNCOND ("Time "<<(Simulator::Now()).GetSeconds()<<" tx velocity" << txPosition->GetVelocity());
+		if (rxDistSq > 0.0)
+		{
+			int rangeCount = m_txSafetyRangesSq.size ();
+			for (int index = 1; index <= rangeCount; index++)
+			{
+				if (rxDistSq <= m_txSafetyRangesSq[index - 1])
+				{
+					//todo: pass index + base
+					if(priority>=priority_threshold){
+						m_waveBsmStats_hp->IncRxPktInRangeCount (index);
+					}/*
                   if(priority_hp==5){
                     m_waveBsmStats_hp->IncRxPktInRangeCount (index);
                   }*/
-                  else{
-                    m_waveBsmStats->IncRxPktInRangeCount (index);
-                  }
-                }
-            }
-        }
-    }
+					else{
+						m_waveBsmStats->IncRxPktInRangeCount (index);
+					}
+				}
+			}
+		}
+	}
 }
+
+
 int64_t
 BsmApplication::AssignStreams (int64_t streamIndex)
 {
