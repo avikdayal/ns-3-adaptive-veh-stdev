@@ -1287,66 +1287,44 @@ double BsmApplication::GetAdaptivePriorityLevel(int sendingNodeId, int rxNodeId)
 
 double BsmApplication::GetTTC(int sendingNodeId, int rxNodeId)
 {
-  int txNodeId = sendingNodeId;
-  Ptr<Node> txNode = GetNode (txNodeId);
-  Ptr<MobilityModel> txPosition = txNode->GetObject<MobilityModel> ();
-  NS_ASSERT (txPosition != 0);
-  Vector posm_tx = txPosition->GetPosition(); // Get velocity
-  Vector vel = txPosition->GetVelocity(); // Get velocity
-//  double node_speed;
-//  node_speed = vel.x * vel.x + vel.y * vel.y + vel.z * vel.z;
-  int senderMoving = m_nodesMoving->at (txNodeId);
-  double ttc=0;//time to collision
-  if (senderMoving != 0)
-    {
-      //int nRxNodes = m_adhocTxInterfaces->GetN ();
-          Ptr<Node> rxNode = GetNode (rxNodeId);
+	int txNodeId = sendingNodeId;
+	Ptr<Node> txNode = GetNode (txNodeId);
+	Ptr<MobilityModel> txPosition = txNode->GetObject<MobilityModel> ();
+	NS_ASSERT (txPosition != 0);
+	int senderMoving = m_nodesMoving->at (txNodeId);
+	double ttc=1000; //time to collision
+	if (rxNodeId == txNodeId || senderMoving ==0) {
+		return ttc;
+	}
 
-          if (rxNodeId != txNodeId)
-            {
-              Ptr<MobilityModel> rxPosition = rxNode->GetObject<MobilityModel> ();
-              NS_ASSERT (rxPosition != 0);
-              Vector vel_rx = rxPosition->GetVelocity(); // Get velocity
-              Vector posm_rx = rxPosition->GetPosition(); // Get position
-            //  double node_speed_rx;
-             // node_speed_rx = vel_rx.x * vel_rx.x + vel_rx.y * vel_rx.y + vel_rx.z * vel_rx.z;
-              //double rel_vel=(std::abs(node_speed-node_speed_rx));
-              //double rel_vel=(std::abs(vel_rx.x-vel.x));
-              double rel_vel=(vel_rx.x-vel.x);
-              // confirm that the receiving node
-              // has also started moving in the scenario
-              // if it has not started moving, then
-              // it is not a candidate to receive a packet
-              int receiverMoving = m_nodesMoving->at (rxNodeId);
-              if (receiverMoving == 1)
-                {
-                  //double distSq = MobilityHelper::GetDistanceSquaredBetween (txNode, rxNode);
-                  //double distSq = std::abs(posm_rx.x-posm_tx.x);
-                  double distSq = (posm_rx.x-posm_tx.x);
-                  //double distSq = MobilityHelper::GetDistanceSquaredBetween (txNode, rxNode);
-                  //ttc=std::sqrt(distSq/rel_vel);
-                  if(std::abs(posm_rx.y-posm_tx.y)<2){
-                    if (distSq>0){
-                      ttc=  distSq/rel_vel;
-                    }
-                    else{
-                      ttc=  -distSq/rel_vel;
-                    }
-                  }
-                  if (ttc < 0){
-                    ttc = 1000;
-                  }
+	Vector posm_tx = txPosition->GetPosition(); // Get velocity
+	Vector vel = txPosition->GetVelocity(); // Get velocity
+	Ptr<Node> rxNode = GetNode (rxNodeId);
 
-                  if(rxNodeId==63 && txNodeId==9){
-                    //std::cout << "TTC Calculation: " << " Time: " << Simulator::Now().GetMilliSeconds () << " rxNode: " << rxNodeId << " txNode: " << txNodeId << " POSRX: " << posm_rx << " PosRXy: " << posm_rx.y << " POSTX: " << posm_tx << " POSTXy: " << posm_tx.y << " vel_rx: " << vel_rx.x << "  vel_tx: " << vel.x << " NodeSpeedRX: " << node_speed_rx << " NodeSpeedTX: " << node_speed << " ttc: " << ttc << " EstDistance " << distSq <<'\n';
-                  }
+	Ptr<MobilityModel> rxPosition = rxNode->GetObject<MobilityModel> ();
+	NS_ASSERT (rxPosition != 0);
+	Vector vel_rx = rxPosition->GetVelocity(); // Get velocity
+	Vector posm_rx = rxPosition->GetPosition(); // Get position
+	double rel_vel=(vel_rx.x-vel.x);
+	int receiverMoving = m_nodesMoving->at (rxNodeId);
+	if (receiverMoving == 1)
+	{
+		double distSq = (posm_rx.x-posm_tx.x);
+		if(std::abs(posm_rx.y-posm_tx.y)<2){
+			if (distSq>0){
+				ttc=  distSq/rel_vel;
+			}
+			else{
+				ttc=  -distSq/rel_vel;
+			}
+		}
+		if (ttc < 0){
+			ttc = 1000;
+		}
 
-                }
+	}
 
-              }
-            }
-
-            return ttc;
+	return ttc;
 }
 
 void BsmApplication::ReceiveWavePacket (Ptr<Socket> socket)
@@ -1605,9 +1583,6 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
 	double priority_threshold=5.0;
 	double priority_rxtx;
 	priority_rxtx=GetAdaptivePriorityLevel(txNodeId,rxNodeId);
-	/*if(priority>=priority_threshold){
-    m_waveBsmStats_hp->IncRxPktCount ();
-  }*/
 	if(priority>=priority_threshold){
 		m_waveBsmStats_hp->IncRxPktCount ();
 	}
@@ -1615,14 +1590,12 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
 		m_waveBsmStats->IncRxPktCount ();
 	}
 	Ptr<MobilityModel> rxPosition = rxNode->GetObject<MobilityModel> ();
-	/*
-  if(priority_hp==5){
-    m_waveBsmStats_hp->IncRxPktCount ();
-  }*/
-	/*new code*/
-	//static std::atomic<int> crashes(0);
+
+
 	Ptr<ConstantVelocityMobilityModel> mob_tx = txNode-> GetObject<ConstantVelocityMobilityModel>();
 	Ptr<ConstantVelocityMobilityModel> mob_rx = rxNode-> GetObject<ConstantVelocityMobilityModel>();
+
+
 	NS_ASSERT(mob_tx);
 	NS_ASSERT(mob_rx);
 	Vector posm_rx = mob_rx->GetPosition (); // Get position
@@ -1631,34 +1604,23 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
 	Vector vel_tx = mob_tx->GetVelocity (); // Get velocity
 	double temp_ttc=GetTTC(txNodeId,rxNodeId);
 	double crash_thres=5.0;
-	if(((temp_ttc<crash_thres) && (std::abs(posm_rx.y-posm_tx.y)<=m_lane_thres) && (posm_rx.x <= posm_tx.x) && (vel_rx.x > vel_tx.x)) ||
-	   ((temp_ttc<crash_thres) && (std::abs(posm_rx.y-posm_tx.y)<=m_lane_thres) && (posm_tx.x <= posm_rx.x) && (vel_tx.x > vel_rx.x)))
+	if(( (std::abs(posm_rx.y-posm_tx.y)<=m_lane_thres) && (posm_rx.x <= posm_tx.x) && (vel_rx.x > vel_tx.x)) ||
+	   ( (std::abs(posm_rx.y-posm_tx.y)<=m_lane_thres) && (posm_tx.x <= posm_rx.x) && (vel_tx.x > vel_rx.x)))
 	{
-		crashes++;
-		std::cout << "crash occurred" << crashes << " Time: " << Simulator::Now().GetMilliSeconds () << " rxNode: " << rxNodeId << " txNode: " << txNodeId << " POSRX: x=" << posm_rx.x << ", y=" << posm_rx.y << " POSTX: x=" << posm_tx.x << ", y=" << posm_tx.y << "vel_rx: " << vel_rx.x << "  vel_tx: " << vel_tx.x << " priority: "<< priority_rxtx << " ttc: " << temp_ttc <<'\n';
-		//std::cout << "difference in y positions: " << std::abs(posm_tx.y-posm_rx.y) << " lane thres: "<< m_lane_thres <<'\n';
-		//mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
+		if (temp_ttc<crash_thres) {
+			crashes++;
+			std::cout << "crash occurred" << crashes ;
+		}
+		else {
+			manuevers++;
+			std::cout << "corrc occurred" << manuevers ;
+		}
+		std::cout << " Time: " << Simulator::Now().GetMilliSeconds () << " rxNode: " << rxNodeId << " txNode: " << txNodeId
+				<< " POSRX: x=" << posm_rx.x << ", y=" << posm_rx.y << " POSTX: x=" << posm_tx.x << ", y=" << posm_tx.y << "vel_rx: " << vel_rx.x
+				<< "  vel_tx: " << vel_tx.x << " priority: "<< priority_rxtx << " ttc: " << temp_ttc <<'\n';
 		mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
 		mob_tx->SetVelocity(Vector(vel_rx.x,0.0,0.0));
 	}
-	else if(priority_rxtx>=priority_threshold){
-
-		if(vel_tx.x<vel_rx.x){
-			manuevers++;
-			std::cout << "*About to change Velocity: " << " priority: "<< priority_rxtx << Simulator::Now () << " rxNode: " << rxNodeId << " txNode: " << txNodeId << " POSx: " << posm_rx.x << " POSy: " << posm_rx.y << " POSTXx: " << posm_rx.x << " POSTXy: " << posm_rx.y << "vel_rx: " << vel_rx.x << " vel_tx: " << vel_tx.x << " priority: "<< priority_rxtx <<'\n';
-			//std::cout << Simulator::Now () << " rxNode: " << rxNodeId <<" POS: x=" << posm_rx.x << ", y=" << posm_rx.y << ", z=" << posm_rx.z << "vel_rx: " << vel_rx.x << " vel_tx: " << vel_tx.x << " priority: "<< priority_rxtx <<'\n';
-			mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
-			mob_tx->SetVelocity(Vector(vel_rx.x,0.0,0.0));
-			//mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
-		}
-	}
-	else{
-		if(priority_rxtx>1){
-			//std::cout <<"*LPNODE: "<< Simulator::Now () << " rxNode: " << rxNodeId <<" POS: x=" << posm_rx.x << ", y=" << posm_rx.y << ", z=" << posm_rx.z << "vel_rx: " << vel_rx.x << " vel_tx: " << vel_tx.x << " priority: "<< priority_rxtx <<'\n';
-		}
-
-	}
-
 
 	NS_ASSERT (rxPosition != 0);
 	// confirm that the receiving node

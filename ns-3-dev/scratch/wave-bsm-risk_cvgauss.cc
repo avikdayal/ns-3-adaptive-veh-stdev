@@ -1706,6 +1706,17 @@ VanetRoutingExperiment::ProcessOutputs ()
   double bsm_pdr9_hp = m_waveBsmHelper.GetWaveBsmStats_hp ()->GetCumulativeBsmPdr (9);
   double bsm_pdr10_hp = m_waveBsmHelper.GetWaveBsmStats_hp ()->GetCumulativeBsmPdr (10);
 
+  double bsm_pdr1_hp_count = m_waveBsmHelper.GetWaveBsmStats_hp ()->GetRxPktInRangeCount (1);
+  double bsm_pdr2_hp_count = m_waveBsmHelper.GetWaveBsmStats_hp ()->GetRxPktInRangeCount (2);
+  double bsm_pdr3_hp_count = m_waveBsmHelper.GetWaveBsmStats_hp ()->GetRxPktInRangeCount (3);
+  double bsm_pdr4_hp_count = m_waveBsmHelper.GetWaveBsmStats_hp ()->GetRxPktInRangeCount (4);
+  double bsm_pdr5_hp_count = m_waveBsmHelper.GetWaveBsmStats_hp ()->GetRxPktInRangeCount (5);
+  double bsm_pdr6_hp_count = m_waveBsmHelper.GetWaveBsmStats_hp ()->GetRxPktInRangeCount (6);
+  double bsm_pdr7_hp_count = m_waveBsmHelper.GetWaveBsmStats_hp ()->GetRxPktInRangeCount (7);
+  double bsm_pdr8_hp_count = m_waveBsmHelper.GetWaveBsmStats_hp ()->GetRxPktInRangeCount (8);
+  double bsm_pdr9_hp_count = m_waveBsmHelper.GetWaveBsmStats_hp ()->GetRxPktInRangeCount (9);
+  double bsm_pdr10_hp_count = m_waveBsmHelper.GetWaveBsmStats_hp ()->GetRxPktInRangeCount (10);
+
   double averageRoutingGoodputKbps = 0.0;
   uint32_t totalBytesTotal = m_routingHelper->GetRoutingStats ().GetCumulativeRxBytes ();
   averageRoutingGoodputKbps = (((double) totalBytesTotal * 8.0) / m_TotalSimTime) / 1000.0;
@@ -1728,8 +1739,8 @@ VanetRoutingExperiment::ProcessOutputs ()
     {
       std::cout << "inside of process outputs" << '\n';
       NS_LOG_UNCOND ("BSM_PDR1=" << bsm_pdr1 << " BSM_PDR2=" << bsm_pdr2 << " BSM_PDR3=" << bsm_pdr3 << " BSM_PDR4=" << bsm_pdr4 << " BSM_PDR5=" << bsm_pdr5 << " BSM_PDR6=" << bsm_pdr6 << " BSM_PDR7=" << bsm_pdr7 << " BSM_PDR8=" << bsm_pdr8 << " BSM_PDR9=" << bsm_pdr9 << " BSM_PDR10=" << bsm_pdr10 << " Goodput=" << averageRoutingGoodputKbps << "Kbps MAC/PHY-oh=" << mac_phy_oh);
-
       NS_LOG_UNCOND ("High Priority BSM_PDR1_hp=" << bsm_pdr1_hp << " BSM_PDR2=" << bsm_pdr2_hp << " BSM_PDR3=" << bsm_pdr3_hp << " BSM_PDR4=" << bsm_pdr4_hp << " BSM_PDR5=" << bsm_pdr5_hp << " BSM_PDR6=" << bsm_pdr6_hp << " BSM_PDR7=" << bsm_pdr7_hp << " BSM_PDR8=" << bsm_pdr8_hp << " BSM_PDR9=" << bsm_pdr9_hp << " BSM_PDR10=" << bsm_pdr10_hp << " Goodput=" << averageRoutingGoodputKbps << "Kbps MAC/PHY-oh=" << mac_phy_oh);
+      NS_LOG_UNCOND ("High Priority count=" << bsm_pdr1_hp_count << " BSM_PDR2=" << bsm_pdr2_hp_count << " BSM_PDR3=" << bsm_pdr3_hp_count << " BSM_PDR4=" << bsm_pdr4_hp_count << " BSM_PDR5=" << bsm_pdr5_hp_count << " BSM_PDR6=" << bsm_pdr6_hp_count << " BSM_PDR7=" << bsm_pdr7_hp_count << " BSM_PDR8=" << bsm_pdr8_hp_count << " BSM_PDR9=" << bsm_pdr9_hp_count << " BSM_PDR10=" << bsm_pdr10_hp_count << " Goodput=" << averageRoutingGoodputKbps << "Kbps MAC/PHY-oh=" << mac_phy_oh);
 
     }
 
@@ -1760,6 +1771,7 @@ VanetRoutingExperiment::ProcessOutputs ()
       << cumulativeWaveBsmBytes << ","
       << cumulativeWaveBsmBytes_hp << ""
       << std::endl;
+
 
   out.close ();
   printStats(m_CSVfileName3);
