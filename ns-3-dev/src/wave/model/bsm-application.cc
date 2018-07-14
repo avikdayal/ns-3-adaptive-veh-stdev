@@ -1607,6 +1607,37 @@ bool BsmApplication::NodeInBetween (int nid1, int nid2) {
 }
 
 
+void BsmApplication::ReInitNodes () {
+	Ptr<UniformRandomVariable> var2 = CreateObject<UniformRandomVariable> ();
+	Ptr<NormalRandomVariable> var=CreateObject<NormalRandomVariable> ();
+	int64_t stream = 2;
+	int64_t stream2 = 2;
+	var->SetStream (stream);
+	var2->SetStream (stream2);
+	for(unsigned int i=0;i< m_adhocTxInterfaces->GetN (); i++){
+		Ptr<ConstantVelocityMobilityModel> mob = GetNode(i)-> GetObject<ConstantVelocityMobilityModel>();
+		Vector posm = mob->GetPosition (); // Get position
+		double temp=var2->GetValue (0.0,3.0);
+		if(temp>=0.0 && temp<1.0){
+			mob->SetPosition(Vector(posm.x, 2.0, posm.z));
+		}
+		else if(temp>=1.0 && temp<2.0){
+			mob->SetPosition(Vector(posm.x, 6.0, posm.z));
+		}
+		else if(temp>=2.0 && temp<3.0){
+			mob->SetPosition(Vector(posm.x, 10.0, posm.z));
+		}
+		else{
+			std::cout << "error in allocating y position: " << temp << '\n';
+		}
+
+		Vector node_vel=Vector(30+std::sqrt(16)*var->GetValue (), 0.0, 0.0);
+		//Vector node_vel=Vector(30+0.5*var->GetValue (), 0.0, 0.0);
+		mob->SetVelocity(node_vel);
+	}
+}
+
+
 
 void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
 		Ptr<Node> rxNode, int txNodeId, int rxNodeId, double prio)
@@ -1643,27 +1674,29 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
 	if(( (std::abs(posm_rx.y-posm_tx.y)<=m_lane_thres) && (posm_rx.x <= posm_tx.x) && (vel_rx.x > vel_tx.x)) ||
 			( (std::abs(posm_rx.y-posm_tx.y)<=m_lane_thres) && (posm_tx.x <= posm_rx.x) && (vel_tx.x > vel_rx.x)))
 	{
-		if (!NodeInBetween(txNodeId,rxNodeId)) {
-			if (temp_ttc<crash_thres) {
-				if(Simulator::Now().GetMilliSeconds()>2000){
-					crashes++;
-				}
-
-				std::cout << "crash occurred" << crashes << " ttc: " << temp_ttc<< " priorityrxtx: " << priority_rxtx << " priority: " << priority << std::endl ;
+		std::cout << " Time: " << Simulator::Now().GetMilliSeconds () << " rxNode: " << rxNodeId << " txNode: " << txNodeId
+				<< " POSRX: x=" << posm_rx.x << ", y=" << posm_rx.y << " POSTX: x=" << posm_tx.x << ", y=" << posm_tx.y << "vel_rx: " << vel_rx.x
+				<< "  vel_tx: " << vel_tx.x << " priority: "<< priority_rxtx << " ttc: " << temp_ttc <<'\n';
+		//if (!NodeInBetween(txNodeId,rxNodeId)) {
+		if (temp_ttc<crash_thres) {
+			crashes++;
+			if(Simulator::Now().GetMilliSeconds() < 2000){
+				std::cout << "early crash " << crashes << " ttc: " << temp_ttc<< " priorityrxtx: " << priority_rxtx << " priority: " << priority << std::endl ;
 				mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
 				mob_tx->SetVelocity(Vector(vel_rx.x,0.0,0.0));
 			}
 			else {
-				manuevers++;
-				std::cout << "corrc occurred" << manuevers << " ttc: " << temp_ttc<< " priorityrxtx: " << priority_rxtx << " priority: " << priority << std::endl ;
-				mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
+				std::cout << "crash occurred" << crashes << " ttc: " << temp_ttc<< " priorityrxtx: " << priority_rxtx << " priority: " << priority << std::endl ;
 			}
 		}
-		std::cout << " Time: " << Simulator::Now().GetMilliSeconds () << " rxNode: " << rxNodeId << " txNode: " << txNodeId
-				<< " POSRX: x=" << posm_rx.x << ", y=" << posm_rx.y << " POSTX: x=" << posm_tx.x << ", y=" << posm_tx.y << "vel_rx: " << vel_rx.x
-				<< "  vel_tx: " << vel_tx.x << " priority: "<< priority_rxtx << " ttc: " << temp_ttc <<'\n';
-
-
+		else {
+			//if (!NodeInBetween(txNodeId,rxNodeId)) {
+			manuevers++;
+			std::cout << "corrc occurred" << manuevers << " ttc: " << temp_ttc<< " priorityrxtx: " << priority_rxtx << " priority: " << priority << std::endl ;
+			mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
+			//}
+		}
+		//}
 	}
 
 	NS_ASSERT (rxPosition != 0);

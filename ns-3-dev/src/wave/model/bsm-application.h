@@ -156,6 +156,7 @@ private:
   bool NodeInBetween (int nid1, int nid2);
   void HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
                                 Ptr<Node> rxNode, int txNodeId,int rxNodeId, double prio);
+  void ReInitNodes();
   int GetPriorityLevel(int sendingNodeId);
   int GetPriorityLevel(int sendingNodeId, int rxNodeId);
   double GetAdaptivePriorityLevel(int sendingNodeId);
