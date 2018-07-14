@@ -384,599 +384,340 @@ BsmApplication::Setup (Ipv4InterfaceContainer & i,
   m_nodeId = nodeId;
   m_txMaxDelay = txMaxDelay;
 }
-/*void
+
+void
 BsmApplication::GenerateWaveTraffic (Ptr<Socket> socket, uint32_t pktSize,
-  uint32_t pktCount, Time pktInterval,
-  uint32_t sendingNodeId)
-  {
-    NS_LOG_FUNCTION (this);
+		uint32_t pktCount, Time pktInterval,
+		uint32_t sendingNodeId)
+{
+	NS_LOG_FUNCTION (this);
 
-    //std::cout << "inside of Control wave traffic" << '\n';
-    //std::cout << "Inside of priority wave traffic" << '\n';
-    //std::cout << "sending node id" << sendingNodeId;
-    //std::cout << " packet count" << pktCount << '\n';
-    // more packets to send?
-    if (pktCount > 0)
-    {
-      std::string CSVfileName4 =m_CSVfileName3+"_txmsgStats.csv";
-      std::ofstream out2;
-      out2.open(CSVfileName4.c_str(), std::ios::app);
-      // for now, we cannot tell if each node has
-      // started mobility.  so, as an optimization
-      // only send if  this node is moving
-      // if not, then skip
-      int txNodeId = sendingNodeId;
-      Ptr<Node> txNode = GetNode (txNodeId);
-      Ptr<MobilityModel> txPosition = txNode->GetObject<MobilityModel> ();
-      NS_ASSERT (txPosition != 0);
-      uint32_t temp_MsgID=0;
-      //Vector vel = txPosition->GetVelocity(); // Get velocity
-      //int node_speed;
-      //node_speed = vel.x * vel.x + vel.y * vel.y + vel.z * vel.z;
-      int priority;
+	if (pktCount > 0)
+	{
+		std::string CSVfileName4 =m_CSVfileName3+"_txmsgStats.csv";
+		std::ofstream out2;
+		out2.open(CSVfileName4.c_str(), std::ios::app);
 
-      int senderMoving = m_nodesMoving->at (txNodeId);
-      if (senderMoving != 0)
-      {
-        //OLD CODE for priority!!!!!!!
-        //priority=GetPriorityLevel(txNodeId);
+		// for now, we cannot tell if each node has
+		// started mobility.  so, as an optimization
+		// only send if  this node is moving
+		// if not, then skip
+		int txNodeId = sendingNodeId;
+		Ptr<Node> txNode = GetNode (txNodeId);
+		Ptr<MobilityModel> txPosition = txNode->GetObject<MobilityModel> ();
+		NS_ASSERT (txPosition != 0);
+		uint32_t temp_MsgID=0;
+		double priority;
 
-        priority=GetAdaptivePriorityLevel(txNodeId);
-        //  SeqTsHeader seqTs;
-        //  seqTs.SetSeq (pktCount);
-        //  Ptr<Packet> p = Create<Packet> (pktSize-(8+4)); // 8+4 : the size of the seqTs header
-        //  p->AddHeader (seqTs);
-        //--> add
-        static std::atomic<int> MsgId(0);
-        uint32_t lcal = MsgId++;
-        temp_MsgID=lcal;
-        Ptr<Packet> pkt = Create<Packet>(pktSize);
-        MyTag tag;
-        tag.SetMsgId(lcal);
-        tag.SetNodeId(txNodeId);
-        tag.SetPrio(priority); //--> change to calculate prio
-        tag.SetEmitTime(Simulator::Now().GetMilliSeconds());
-        pkt->AddPacketTag(tag);
-        //--> done
+		int senderMoving = m_nodesMoving->at (txNodeId);
+		if (senderMoving != 0)
+		{
 
-        socket->Send (pkt);
-        PacketInfo * Pi = new PacketInfo();
-        hp_PacketList[lcal] = Pi;
-        Pi->m_txNodeId= txNodeId;
-        Pi->m_msgId=lcal;
-        //PacketInfo pi;
-        //pi.m_txpriority=(uint32_t) priority;
-        //std::cout << "Priority of node set as " << pi.m_txpriority << '\n';
-        //PacketList[lcal] = Pi;
-        //Pi.SetSendTime((uint32_t) Simulator::Now().GetMilliSeconds());
-        //Pi.SetSendPriority(priority);
-        //socket->Send (Create<Packet> (pktSize));
-        // count it
-        if(priority>=5){
-          m_waveBsmStats_hp->IncTxPktCount ();
-          m_waveBsmStats_hp->IncTxByteCount (pktSize);
-          int wavePktsSent = m_waveBsmStats_hp->GetTxPktCount ();
-          if ((m_waveBsmStats_hp->GetLogging () != 0) && ((wavePktsSent % 1000) == 0))
-          {
-            NS_LOG_UNCOND ("Sending HP WAVE pkt # " << wavePktsSent );
-          }
-        }
-        else{
-          m_waveBsmStats->IncTxPktCount ();
-          m_waveBsmStats->IncTxByteCount (pktSize);
-          int wavePktsSent = m_waveBsmStats->GetTxPktCount ();
-          if ((m_waveBsmStats->GetLogging () != 0) && ((wavePktsSent % 1000) == 0))
-          {
-            NS_LOG_UNCOND ("Sending WAVE pkt # " << wavePktsSent );
-          }
-        }
+			priority=GetAdaptivePriorityLevel(txNodeId);
+
+			static std::atomic<int> MsgId(0);
+			uint32_t lcal = MsgId++;
+			temp_MsgID=lcal;
+			Ptr<Packet> pkt = Create<Packet>(pktSize);
+			MyTag tag;
+			tag.SetMsgId(lcal);
+			tag.SetNodeId(txNodeId);
+			tag.SetPrio(priority); //--> change to calculate prio   -pktInterval-m_prevTxDelay
+			tag.SetEmitTime(Simulator::Now().GetMilliSeconds()-pktInterval.GetMilliSeconds()-m_prevTxDelay.GetMilliSeconds());
+			pkt->AddPacketTag(tag);
+
+			socket->Send (pkt);
+			PacketInfo * Pi = new PacketInfo();
+			hp_PacketList[lcal] = Pi;
+			Pi->m_txNodeId= txNodeId;
+			Pi->m_msgId=lcal;
+			Pi->m_sysTime=Simulator::Now().GetMilliSeconds()-pktInterval.GetMilliSeconds()-m_prevTxDelay.GetMilliSeconds();
+			if(priority>=5){
+				m_waveBsmStats_hp->IncTxPktCount ();
+				m_waveBsmStats_hp->IncTxByteCount (pktSize);
+				int wavePktsSent = m_waveBsmStats_hp->GetTxPktCount ();
+				if ((m_waveBsmStats_hp->GetLogging () != 0) && ((wavePktsSent % 1000) == 0))
+				{
+					NS_LOG_UNCOND ("Sending HP WAVE pkt # " << wavePktsSent );
+				}
+
+			}
+			else{
+				m_waveBsmStats->IncTxPktCount ();
+				m_waveBsmStats->IncTxByteCount (pktSize);
+				int wavePktsSent = m_waveBsmStats->GetTxPktCount ();
+				if ((m_waveBsmStats->GetLogging () != 0) && ((wavePktsSent % 1000) == 0))
+				{
+					NS_LOG_UNCOND ("Sending WAVE pkt # " << wavePktsSent );
+				}
+			}
 
 
-        // find other nodes within range that would be
-        // expected to receive this broadbast
-        int nRxNodes = m_adhocTxInterfaces->GetN ();
-        for (int i = 0; i < nRxNodes; i++)
-        {
-          Ptr<Node> rxNode = GetNode (i);
-          int rxNodeId = rxNode->GetId ();
+			// find other nodes within range that would be
+			// expected to receive this broadbast
+			int nRxNodes = m_adhocTxInterfaces->GetN ();
+			for (int i = 0; i < nRxNodes; i++)
+			{
+				Ptr<Node> rxNode = GetNode (i);
+				int rxNodeId = rxNode->GetId ();
 
-          if (rxNodeId != txNodeId)
-          {
-            Ptr<MobilityModel> rxPosition = rxNode->GetObject<MobilityModel> ();
-            NS_ASSERT (rxPosition != 0);
-            // confirm that the receiving node
-            // has also started moving in the scenario
-            // if it has not started moving, then
-            // it is not a candidate to receive a packet
-            int receiverMoving = m_nodesMoving->at (rxNodeId);
-            if (receiverMoving == 1)
-            {
-              double distSq = MobilityHelper::GetDistanceSquaredBetween (txNode, rxNode);
-              double priority_rx=GetAdaptivePriorityLevel(txNodeId,rxNodeId);
-              if(priority_rx>=5.0){
-                Pi->AddNodeInRange(rxNodeId);
-                out2 << temp_MsgID << "," << txNodeId<< "," << rxNodeId << ","<< priority << "," << distSq <<std::endl;
-              }
-              if (distSq > 0.0)
-              {
-                // dest node within range?
-                //todo: int base = (prio == 1) ? 0 : 10;
-                int rangeCount = m_txSafetyRangesSq.size ();
-                for (int index = 1; index <= rangeCount; index++)
-                {
-                  if (distSq <= m_txSafetyRangesSq[index - 1])
-                  {
-                    // we should expect dest node to receive broadcast pkta
-                    // todo: index + base
-                    if(priority>=5){
-                      m_waveBsmStats_hp->IncExpectedRxPktCount (index);
-                      //pktInterval=MilliSeconds (50);
-                      pktInterval=MilliSeconds (100);
-                    }
-                    else if(priority>=4){
-                      m_waveBsmStats_hp->IncExpectedRxPktCount (index);
-                      pktInterval=MilliSeconds (100);
-                      //pktInterval=MilliSeconds (100);
-                    }
-                    else if(priority>=3){
-                      m_waveBsmStats_hp->IncExpectedRxPktCount (index);
-                      pktInterval=MilliSeconds (100);
-                      //pktInterval=MilliSeconds (100);
-                    }
-                    else if(priority>=2){
-                      m_waveBsmStats_hp->IncExpectedRxPktCount (index);
-                      pktInterval=MilliSeconds (100);
-                      //pktInterval=MilliSeconds (100);
-                    }
-                    else{
-                      m_waveBsmStats->IncExpectedRxPktCount (index);
-                      pktInterval=MilliSeconds (100);;
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      //std::cout << "Packet Interval: " << pktInterval << '\n';
-      // every BSM must be scheduled with a tx time delay
-      // of +/- (5) ms.  See comments in StartApplication().
-      // we handle this as a tx delay of [0..10] ms
-      // from the start of the pktInterval boundary
-      out2.close();
-      uint32_t d_ns = static_cast<uint32_t> (m_txMaxDelay.GetInteger ());
-      Time txDelay = NanoSeconds (m_unirv->GetInteger (0, d_ns));
+				if (rxNodeId != txNodeId)
+				{
+					Ptr<MobilityModel> rxPosition = rxNode->GetObject<MobilityModel> ();
+					NS_ASSERT (rxPosition != 0);
 
-      // do not want the tx delay to be cumulative, so
-      // deduct the previous delay value.  thus we adjust
-      // to schedule the next event at the next pktInterval,
-      // plus some new [0..10] ms tx delay
-      Time txTime = pktInterval - m_prevTxDelay + txDelay;
-      m_prevTxDelay = txDelay;
-      //std::cout << " packet count " << pktCount <<'\n';
-      Simulator::ScheduleWithContext (socket->GetNode ()->GetId (),
-      txTime, &BsmApplication::GenerateWaveTraffic, this,
-      socket, pktSize, pktCount - 1, pktInterval,  socket->GetNode ()->GetId ());
-    }
-    else
-    {
-      std::cout << " Simulation Finished at time " << (Simulator::Now ()).GetSeconds () << std::endl;
-      socket->Close ();
-    }
-  }*/
-  void
-  BsmApplication::GenerateWaveTraffic (Ptr<Socket> socket, uint32_t pktSize,
-                                       uint32_t pktCount, Time pktInterval,
-                                       uint32_t sendingNodeId)
-  {
-    NS_LOG_FUNCTION (this);
-    //std::cout << "Inside of priority wave traffic" << '\n';
-    //std::cout << "sending node id" << sendingNodeId;
-    //std::cout << " packet count" << pktCount << '\n';
-    // more packets to send?
+					// confirm that the receiving node
+					// has also started moving in the scenario
+					// if it has not started moving, then
+					// it is not a candidate to receive a packet
+					int receiverMoving = m_nodesMoving->at (rxNodeId);
+					if (receiverMoving == 1)
+					{
+						double distSq = MobilityHelper::GetDistanceSquaredBetween (txNode, rxNode);
+
+						double priority_rx=GetAdaptivePriorityLevel(txNodeId,rxNodeId);
+						double ttc=GetTTC(txNodeId,rxNodeId);
+						if(priority_rx>=5.0){
+							Pi->AddNodeInRange(rxNodeId);
+							Pi->AddTTCInRange(rxNodeId, ttc);
+							Pi->AddDistInRange(rxNodeId, std::sqrt(distSq));
+							out2 << temp_MsgID << "," << txNodeId<< "," << rxNodeId << ","<< priority << "," << distSq << Simulator::Now().GetMilliSeconds() <<std::endl;
+						}
 
 
-    if (pktCount > 0)
-      {
-        std::string CSVfileName4 =m_CSVfileName3+"_txmsgStats.csv";
-        std::ofstream out2;
-        out2.open(CSVfileName4.c_str(), std::ios::app);
+						if (distSq > 0.0)
+						{
+							// dest node within range?
+							//todo: int base = (prio == 1) ? 0 : 10;
+							int min_interval=100;
+							int rangeCount = m_txSafetyRangesSq.size ();
+							for (int index = 1; index <= rangeCount; index++)
+							{
+								if (distSq <= m_txSafetyRangesSq[index - 1])
+								{
+									// we should expect dest node to receive broadcast pkta
+									// todo: index + base
+									if(priority>=5){
+										m_waveBsmStats_hp->IncExpectedRxPktCount (index);
+										//pktInterval=MilliSeconds (50);
+										pktInterval=MilliSeconds (min_interval);
+										//pktInterval=MilliSeconds (100);//control code
+									}
+									else if(priority>1){
+										//m_waveBsmStats_hp->IncExpectedRxPktCount (index);
+										m_waveBsmStats->IncExpectedRxPktCount (index);
+										//int pkt_time;
+										//pkt_time=max_interval+(max_interval - min_interval)/(max_priority - min_priority) -priority* (max_interval - min_interval)/(max_priority- min_priority);
+										pktInterval=MilliSeconds (100);
+									}
+									else{
+										pktInterval=MilliSeconds (100);//control code
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		out2.close();
+		// every BSM must be scheduled with a tx time delay
+		// of +/- (5) ms.  See comments in StartApplication().
+		// we handle this as a tx delay of [0..10] ms
+		// from the start of the pktInterval boundary
+		uint32_t d_ns = static_cast<uint32_t> (m_txMaxDelay.GetInteger ());
+		Time txDelay = NanoSeconds (m_unirv->GetInteger (0, d_ns));
 
-        // for now, we cannot tell if each node has
-        // started mobility.  so, as an optimization
-        // only send if  this node is moving
-        // if not, then skip
-        int txNodeId = sendingNodeId;
-        Ptr<Node> txNode = GetNode (txNodeId);
-        Ptr<MobilityModel> txPosition = txNode->GetObject<MobilityModel> ();
-        NS_ASSERT (txPosition != 0);
-        uint32_t temp_MsgID=0;
-    		//Vector vel = txPosition->GetVelocity(); // Get velocity
-    		//int node_speed;
-    		//node_speed = vel.x * vel.x + vel.y * vel.y + vel.z * vel.z;
-    		double priority;
-
-        int senderMoving = m_nodesMoving->at (txNodeId);
-        if (senderMoving != 0)
-          {
-
-            priority=GetAdaptivePriorityLevel(txNodeId);
-
-            //  SeqTsHeader seqTs;
-          //  seqTs.SetSeq (pktCount);
-          //  Ptr<Packet> p = Create<Packet> (pktSize-(8+4)); // 8+4 : the size of the seqTs header
-          //  p->AddHeader (seqTs);
-         	  //--> add
-        		static std::atomic<int> MsgId(0);
-        		uint32_t lcal = MsgId++;
-            temp_MsgID=lcal;
-            if(lcal==1){
-              //std::cout << "in printout statement" << '\n';
-              //out2 << "Msg ID" << "," << "TxNode"<< "," << "RxNode" << "," << "TxPriority" << "," << "RxPriority" << "," << "Delay" << "," << "ttc" << "," << "dist" <<"," << "tx_vel" << "," << "rx_vel" << "," << "Sys_time" << std::endl;
-            }
-        		Ptr<Packet> pkt = Create<Packet>(pktSize);
-        		MyTag tag;
-        		tag.SetMsgId(lcal);
-        		tag.SetNodeId(txNodeId);
-        		tag.SetPrio(priority); //--> change to calculate prio   -pktInterval-m_prevTxDelay
-            //Time temp_txTime=Simulator::Now().GetMilliSeconds();
-            //tag.SetEmitTime(temp_txTime);
-            tag.SetEmitTime(Simulator::Now().GetMilliSeconds()-pktInterval.GetMilliSeconds()-m_prevTxDelay.GetMilliSeconds());
-            //std::cout << "Message: " << lcal << " Emitter time: " << Simulator::Now().GetMilliSeconds() - pktInterval.GetMilliSeconds() - m_prevTxDelay.GetMilliSeconds() << '\n';
-        		pkt->AddPacketTag(tag);
-               //--> done
-
-            socket->Send (pkt);
-            PacketInfo * Pi = new PacketInfo();
-            hp_PacketList[lcal] = Pi;
-            Pi->m_txNodeId= txNodeId;
-            Pi->m_msgId=lcal;
-            Pi->m_sysTime=Simulator::Now().GetMilliSeconds()-pktInterval.GetMilliSeconds()-m_prevTxDelay.GetMilliSeconds();
-            //PacketInfo pi;
-            //pi.m_txpriority=(uint32_t) priority;
-            //std::cout << "Priority of node set as " << pi.m_txpriority << '\n';
-            //PacketList[lcal] = Pi;
-            //Pi.SetSendTime((uint32_t) Simulator::Now().GetMilliSeconds());
-            //Pi.SetSendPriority(priority);
-            //socket->Send (Create<Packet> (pktSize));
-            // count it
-            if(priority>=5){
-              m_waveBsmStats_hp->IncTxPktCount ();
-              m_waveBsmStats_hp->IncTxByteCount (pktSize);
-              int wavePktsSent = m_waveBsmStats_hp->GetTxPktCount ();
-              if ((m_waveBsmStats_hp->GetLogging () != 0) && ((wavePktsSent % 1000) == 0))
-                {
-                  NS_LOG_UNCOND ("Sending HP WAVE pkt # " << wavePktsSent );
-                }
-
-            }
-            else{
-              m_waveBsmStats->IncTxPktCount ();
-              m_waveBsmStats->IncTxByteCount (pktSize);
-              int wavePktsSent = m_waveBsmStats->GetTxPktCount ();
-              if ((m_waveBsmStats->GetLogging () != 0) && ((wavePktsSent % 1000) == 0))
-                {
-                  NS_LOG_UNCOND ("Sending WAVE pkt # " << wavePktsSent );
-                }
-            }
+		// do not want the tx delay to be cumulative, so
+		// deduct the previous delay value.  thus we adjust
+		// to schedule the next event at the next pktInterval,
+		// plus some new [0..10] ms tx delay
+		Time txTime = pktInterval - m_prevTxDelay + txDelay;
+		m_prevTxDelay = txDelay;
+		Simulator::ScheduleWithContext (socket->GetNode ()->GetId (),
+				txTime, &BsmApplication::GeneratePriorityWaveTraffic, this,
+				socket, pktSize, pktCount - 1, pktInterval,  socket->GetNode ()->GetId ());
+	}
+	else
+	{
+		std::cout << "/* Simulation Finished at time */" << (Simulator::Now ()).GetSeconds () << std::endl;
+		socket->Close ();
+	}
+}
 
 
-            // find other nodes within range that would be
-            // expected to receive this broadbast
-            int nRxNodes = m_adhocTxInterfaces->GetN ();
-            for (int i = 0; i < nRxNodes; i++)
-              {
-                Ptr<Node> rxNode = GetNode (i);
-                int rxNodeId = rxNode->GetId ();
-
-                if (rxNodeId != txNodeId)
-                  {
-                    Ptr<MobilityModel> rxPosition = rxNode->GetObject<MobilityModel> ();
-                    NS_ASSERT (rxPosition != 0);
-
-                    // confirm that the receiving node
-                    // has also started moving in the scenario
-                    // if it has not started moving, then
-                    // it is not a candidate to receive a packet
-                    int receiverMoving = m_nodesMoving->at (rxNodeId);
-                    if (receiverMoving == 1)
-                      {
-                        double distSq = MobilityHelper::GetDistanceSquaredBetween (txNode, rxNode);
-
-                        double priority_rx=GetAdaptivePriorityLevel(txNodeId,rxNodeId);
-                        double ttc=GetTTC(txNodeId,rxNodeId);
-                        if(priority_rx>=5.0){
-                          //Pi->send_time = Simulator::Now().GetMilliSeconds();
-                      		//Pi->NodeId= socket->GetNode()->GetId();
-                      		//Pi->priority=priority;
-                      		//Pi->speed = sqrt(node_speed);
-                      		Pi->AddNodeInRange(rxNodeId);
-                          Pi->AddTTCInRange(rxNodeId, ttc);
-                          Pi->AddDistInRange(rxNodeId, std::sqrt(distSq));
-                          out2 << temp_MsgID << "," << txNodeId<< "," << rxNodeId << ","<< priority << "," << distSq <<std::endl;
-                        }
-
-
-                        if (distSq > 0.0)
-                          {
-                            // dest node within range?
-                            //todo: int base = (prio == 1) ? 0 : 10;
-                            int min_interval=100;
-                            //int max_interval=1000;
-                            //int max_priority=5;
-                            //int min_priority=1;
-                            int rangeCount = m_txSafetyRangesSq.size ();
-                            for (int index = 1; index <= rangeCount; index++)
-                              {
-                                if (distSq <= m_txSafetyRangesSq[index - 1])
-                                  {
-                                    // we should expect dest node to receive broadcast pkta
-                                    // todo: index + base
-                                    if(priority>=5){
-                                      m_waveBsmStats_hp->IncExpectedRxPktCount (index);
-                                      //pktInterval=MilliSeconds (50);
-                                      pktInterval=MilliSeconds (min_interval);
-                                      //pktInterval=MilliSeconds (100);//control code
-                                    }
-                                    else if(priority>1){
-                                      //m_waveBsmStats_hp->IncExpectedRxPktCount (index);
-                                      m_waveBsmStats->IncExpectedRxPktCount (index);
-                                      //int pkt_time;
-                                      //pkt_time=max_interval+(max_interval - min_interval)/(max_priority - min_priority) -priority* (max_interval - min_interval)/(max_priority- min_priority);
-                                      pktInterval=MilliSeconds (100);
-                                    }
-                                    else{
-                                    pktInterval=MilliSeconds (100);//control code
-                                  }
-                                  }
-                              }
-                          }
-                      }
-                  }
-              }
-          }
-          out2.close();
-          //std::cout << "Packet Interval: " << pktInterval << '\n';
-        // every BSM must be scheduled with a tx time delay
-        // of +/- (5) ms.  See comments in StartApplication().
-        // we handle this as a tx delay of [0..10] ms
-        // from the start of the pktInterval boundary
-        uint32_t d_ns = static_cast<uint32_t> (m_txMaxDelay.GetInteger ());
-        Time txDelay = NanoSeconds (m_unirv->GetInteger (0, d_ns));
-
-        // do not want the tx delay to be cumulative, so
-        // deduct the previous delay value.  thus we adjust
-        // to schedule the next event at the next pktInterval,
-        // plus some new [0..10] ms tx delay
-        Time txTime = pktInterval - m_prevTxDelay + txDelay;
-        m_prevTxDelay = txDelay;
-        //std::cout << "Node ID:" << socket->GetNode ()->GetId () << " MsgID:" << temp_MsgID << " TxTime:" << txTime << '\n';
-        //std::cout << "/* packet count */" << pktCount <<'\n';
-        Simulator::ScheduleWithContext (socket->GetNode ()->GetId (),
-                                        txTime, &BsmApplication::GeneratePriorityWaveTraffic, this,
-                                        socket, pktSize, pktCount - 1, pktInterval,  socket->GetNode ()->GetId ());
-      }
-    else
-      {
-        std::cout << "/* Simulation Finished at time */" << (Simulator::Now ()).GetSeconds () << std::endl;
-        socket->Close ();
-      }
-  }
 void
 BsmApplication::GeneratePriorityWaveTraffic (Ptr<Socket> socket, uint32_t pktSize,
-                                     uint32_t pktCount, Time pktInterval,
-                                     uint32_t sendingNodeId)
+		uint32_t pktCount, Time pktInterval,
+		uint32_t sendingNodeId)
 {
-  NS_LOG_FUNCTION (this);
-  //std::cout << "Inside of priority wave traffic" << '\n';
-  //std::cout << "sending node id" << sendingNodeId;
-  //std::cout << " packet count" << pktCount << '\n';
-  // more packets to send?
+	NS_LOG_FUNCTION (this);
+
+	if (pktCount > 0)
+	{
+		std::string CSVfileName4 =m_CSVfileName3+"_txmsgStats.csv";
+		std::ofstream out2;
+		out2.open(CSVfileName4.c_str(), std::ios::app);
+
+		// for now, we cannot tell if each node has
+		// started mobility.  so, as an optimization
+		// only send if  this node is moving
+		// if not, then skip
+		int txNodeId = sendingNodeId;
+		Ptr<Node> txNode = GetNode (txNodeId);
+		Ptr<MobilityModel> txPosition = txNode->GetObject<MobilityModel> ();
+		NS_ASSERT (txPosition != 0);
+		uint32_t temp_MsgID=0;
+		double priority;
+
+		int senderMoving = m_nodesMoving->at (txNodeId);
+		if (senderMoving != 0)
+		{
+
+			priority=GetAdaptivePriorityLevel(txNodeId);
+			static std::atomic<int> MsgId(0);
+			uint32_t lcal = MsgId++;
+			temp_MsgID=lcal;
+			Ptr<Packet> pkt = Create<Packet>(pktSize);
+			MyTag tag;
+			tag.SetMsgId(lcal);
+			tag.SetNodeId(txNodeId);
+			tag.SetPrio(priority); //--> change to calculate prio   -pktInterval-m_prevTxDelay
+			tag.SetEmitTime(Simulator::Now().GetMilliSeconds()-pktInterval.GetMilliSeconds()-m_prevTxDelay.GetMilliSeconds());
+			pkt->AddPacketTag(tag);
+			std::cout << "logx_sending " << Simulator::Now().GetMilliSeconds() << " txNode: " << txNodeId << " MsgId: " << temp_MsgID << std::endl;
+			socket->Send (pkt);
+			PacketInfo * Pi = new PacketInfo();
+			hp_PacketList[lcal] = Pi;
+			Pi->m_txNodeId= txNodeId;
+			Pi->m_msgId=lcal;
+			Pi->m_sysTime=Simulator::Now().GetMilliSeconds()-pktInterval.GetMilliSeconds()-m_prevTxDelay.GetMilliSeconds();
+			if(priority>=5){
+				m_waveBsmStats_hp->IncTxPktCount ();
+				m_waveBsmStats_hp->IncTxByteCount (pktSize);
+				int wavePktsSent = m_waveBsmStats_hp->GetTxPktCount ();
+				if ((m_waveBsmStats_hp->GetLogging () != 0) && ((wavePktsSent % 1000) == 0))
+				{
+					NS_LOG_UNCOND ("Sending HP WAVE pkt # " << wavePktsSent );
+				}
+
+			}
+			else{
+				m_waveBsmStats->IncTxPktCount ();
+				m_waveBsmStats->IncTxByteCount (pktSize);
+				int wavePktsSent = m_waveBsmStats->GetTxPktCount ();
+				if ((m_waveBsmStats->GetLogging () != 0) && ((wavePktsSent % 1000) == 0))
+				{
+					NS_LOG_UNCOND ("Sending WAVE pkt # " << wavePktsSent );
+				}
+			}
 
 
-  if (pktCount > 0)
-    {
-      std::string CSVfileName4 =m_CSVfileName3+"_txmsgStats.csv";
-      std::ofstream out2;
-      out2.open(CSVfileName4.c_str(), std::ios::app);
+			// find other nodes within range that would be
+			// expected to receive this broadbast
+			int nRxNodes = m_adhocTxInterfaces->GetN ();
+			for (int i = 0; i < nRxNodes; i++)
+			{
+				Ptr<Node> rxNode = GetNode (i);
+				int rxNodeId = rxNode->GetId ();
 
-      // for now, we cannot tell if each node has
-      // started mobility.  so, as an optimization
-      // only send if  this node is moving
-      // if not, then skip
-      int txNodeId = sendingNodeId;
-      Ptr<Node> txNode = GetNode (txNodeId);
-      Ptr<MobilityModel> txPosition = txNode->GetObject<MobilityModel> ();
-      NS_ASSERT (txPosition != 0);
-      uint32_t temp_MsgID=0;
-  		//Vector vel = txPosition->GetVelocity(); // Get velocity
-  		//int node_speed;
-  		//node_speed = vel.x * vel.x + vel.y * vel.y + vel.z * vel.z;
-  		double priority;
+				if (rxNodeId != txNodeId)
+				{
+					Ptr<MobilityModel> rxPosition = rxNode->GetObject<MobilityModel> ();
+					NS_ASSERT (rxPosition != 0);
 
-      int senderMoving = m_nodesMoving->at (txNodeId);
-      if (senderMoving != 0)
-        {
+					// confirm that the receiving node
+					// has also started moving in the scenario
+					// if it has not started moving, then
+					// it is not a candidate to receive a packet
+					int receiverMoving = m_nodesMoving->at (rxNodeId);
+					if (receiverMoving == 1)
+					{
+						double distSq = MobilityHelper::GetDistanceSquaredBetween (txNode, rxNode);
 
-          priority=GetAdaptivePriorityLevel(txNodeId);
-
-          //  SeqTsHeader seqTs;
-        //  seqTs.SetSeq (pktCount);
-        //  Ptr<Packet> p = Create<Packet> (pktSize-(8+4)); // 8+4 : the size of the seqTs header
-        //  p->AddHeader (seqTs);
-       	  //--> add
-      		static std::atomic<int> MsgId(0);
-      		uint32_t lcal = MsgId++;
-          temp_MsgID=lcal;
-          if(lcal==1){
-            //std::cout << "in printout statement" << '\n';
-            //out2 << "Msg ID" << "," << "TxNode"<< "," << "RxNode" << "," << "TxPriority" << "," << "RxPriority" << "," << "Delay" << "," << "ttc" << "," << "dist" <<"," << "tx_vel" << "," << "rx_vel" << "," << "Sys_time" << std::endl;
-          }
-      		Ptr<Packet> pkt = Create<Packet>(pktSize);
-      		MyTag tag;
-      		tag.SetMsgId(lcal);
-      		tag.SetNodeId(txNodeId);
-      		tag.SetPrio(priority); //--> change to calculate prio   -pktInterval-m_prevTxDelay
-          //Time temp_txTime=Simulator::Now().GetMilliSeconds();
-          //tag.SetEmitTime(temp_txTime);
-          tag.SetEmitTime(Simulator::Now().GetMilliSeconds()-pktInterval.GetMilliSeconds()-m_prevTxDelay.GetMilliSeconds());
-          //std::cout << "Message: " << lcal << " Emitter time: " << Simulator::Now().GetMilliSeconds() - pktInterval.GetMilliSeconds() - m_prevTxDelay.GetMilliSeconds() << '\n';
-      		pkt->AddPacketTag(tag);
-             //--> done
-
-          socket->Send (pkt);
-          PacketInfo * Pi = new PacketInfo();
-          hp_PacketList[lcal] = Pi;
-          Pi->m_txNodeId= txNodeId;
-          Pi->m_msgId=lcal;
-          Pi->m_sysTime=Simulator::Now().GetMilliSeconds()-pktInterval.GetMilliSeconds()-m_prevTxDelay.GetMilliSeconds();
-          //PacketInfo pi;
-          //pi.m_txpriority=(uint32_t) priority;
-          //std::cout << "Priority of node set as " << pi.m_txpriority << '\n';
-          //PacketList[lcal] = Pi;
-          //Pi.SetSendTime((uint32_t) Simulator::Now().GetMilliSeconds());
-          //Pi.SetSendPriority(priority);
-          //socket->Send (Create<Packet> (pktSize));
-          // count it
-          if(priority>=5){
-            m_waveBsmStats_hp->IncTxPktCount ();
-            m_waveBsmStats_hp->IncTxByteCount (pktSize);
-            int wavePktsSent = m_waveBsmStats_hp->GetTxPktCount ();
-            if ((m_waveBsmStats_hp->GetLogging () != 0) && ((wavePktsSent % 1000) == 0))
-              {
-                NS_LOG_UNCOND ("Sending HP WAVE pkt # " << wavePktsSent );
-              }
-
-          }
-          else{
-            m_waveBsmStats->IncTxPktCount ();
-            m_waveBsmStats->IncTxByteCount (pktSize);
-            int wavePktsSent = m_waveBsmStats->GetTxPktCount ();
-            if ((m_waveBsmStats->GetLogging () != 0) && ((wavePktsSent % 1000) == 0))
-              {
-                NS_LOG_UNCOND ("Sending WAVE pkt # " << wavePktsSent );
-              }
-          }
+						double priority_rx=GetAdaptivePriorityLevel(txNodeId,rxNodeId);
+						double ttc=GetTTC(txNodeId,rxNodeId);
+						if(priority_rx>=5.0){
+							Pi->AddNodeInRange(rxNodeId);
+							Pi->AddTTCInRange(rxNodeId, ttc);
+							Pi->AddDistInRange(rxNodeId, std::sqrt(distSq));
+							out2 << temp_MsgID << "," << txNodeId<< "," << rxNodeId << ","<< priority << "," << distSq <<std::endl;
+						}
 
 
-          // find other nodes within range that would be
-          // expected to receive this broadbast
-          int nRxNodes = m_adhocTxInterfaces->GetN ();
-          for (int i = 0; i < nRxNodes; i++)
-            {
-              Ptr<Node> rxNode = GetNode (i);
-              int rxNodeId = rxNode->GetId ();
-
-              if (rxNodeId != txNodeId)
-                {
-                  Ptr<MobilityModel> rxPosition = rxNode->GetObject<MobilityModel> ();
-                  NS_ASSERT (rxPosition != 0);
-
-                  // confirm that the receiving node
-                  // has also started moving in the scenario
-                  // if it has not started moving, then
-                  // it is not a candidate to receive a packet
-                  int receiverMoving = m_nodesMoving->at (rxNodeId);
-                  if (receiverMoving == 1)
-                    {
-                      double distSq = MobilityHelper::GetDistanceSquaredBetween (txNode, rxNode);
-
-                      double priority_rx=GetAdaptivePriorityLevel(txNodeId,rxNodeId);
-                      double ttc=GetTTC(txNodeId,rxNodeId);
-                      if(priority_rx>=5.0){
-                        //Pi->send_time = Simulator::Now().GetMilliSeconds();
-                    		//Pi->NodeId= socket->GetNode()->GetId();
-                    		//Pi->priority=priority;
-                    		//Pi->speed = sqrt(node_speed);
-                    		Pi->AddNodeInRange(rxNodeId);
-                        Pi->AddTTCInRange(rxNodeId, ttc);
-                        Pi->AddDistInRange(rxNodeId, std::sqrt(distSq));
-                        out2 << temp_MsgID << "," << txNodeId<< "," << rxNodeId << ","<< priority << "," << distSq <<std::endl;
-                      }
-
-
-                      if (distSq > 0.0)
-                        {
-                          // dest node within range?
-                          //todo: int base = (prio == 1) ? 0 : 10;
-                          int min_interval=100;
+						if (distSq > 0.0)
+						{
+							// dest node within range?
+							//todo: int base = (prio == 1) ? 0 : 10;
+							int min_interval=100;
 //#define ADAPTIVE_PRIO
 #ifdef ADAPTIVE_PRIO
-                          int max_interval=1000;
-                          int max_priority=5;
-                          int min_priority=1;
+							int max_interval=1000;
+							int max_priority=5;
+							int min_priority=1;
 #endif
-                          int rangeCount = m_txSafetyRangesSq.size ();
-                          for (int index = 1; index <= rangeCount; index++)
-                            {
-                              if (distSq <= m_txSafetyRangesSq[index - 1])
-                                {
-                                  // we should expect dest node to receive broadcast pkta
-                                  // todo: index + base
-                                  if(priority>=5){
-                                    m_waveBsmStats_hp->IncExpectedRxPktCount (index);
-                                    //pktInterval=MilliSeconds (50);
-                                    pktInterval=MilliSeconds (min_interval);
-                                    //pktInterval=MilliSeconds (100);//control code
-                                  }
-                                  else if(priority>1){
-                                    //m_waveBsmStats_hp->IncExpectedRxPktCount (index);
-                                    m_waveBsmStats->IncExpectedRxPktCount (index);
-
+							int rangeCount = m_txSafetyRangesSq.size ();
+							for (int index = 1; index <= rangeCount; index++)
+							{
+								if (distSq <= m_txSafetyRangesSq[index - 1])
+								{
+									// we should expect dest node to receive broadcast pkta
+									// todo: index + base
+									if(priority>=5){
+										m_waveBsmStats_hp->IncExpectedRxPktCount (index);
+										pktInterval=MilliSeconds (min_interval);
+									}
+									else if(priority>1){
+										m_waveBsmStats->IncExpectedRxPktCount (index);
 #ifdef ADAPTIVE_PRIO
-                                    int pkt_time;
-                                    pkt_time=max_interval+(max_interval - min_interval)/(max_priority - min_priority) -priority* (max_interval - min_interval)/(max_priority- min_priority);
-                                    //std::cout << "In adaptive prio" << '\n';
-                                    pktInterval=MilliSeconds (pkt_time);
+										int pkt_time;
+										pkt_time=max_interval+(max_interval - min_interval)/(max_priority - min_priority) -priority* (max_interval - min_interval)/(max_priority- min_priority);
+										pktInterval=MilliSeconds (pkt_time);
 #else
-                                    pktInterval=MilliSeconds (min_interval);
+										pktInterval=MilliSeconds (min_interval);
 #endif
-                                    //pktInterval=MilliSeconds (50);//control code
-                                    //pktInterval=MilliSeconds (100);
-                                  }
-                                  else{
-                                  m_waveBsmStats->IncExpectedRxPktCount (index);
+									}
+									else{
+										m_waveBsmStats->IncExpectedRxPktCount (index);
 #ifdef ADAPTIVE_PRIO
-                                  pktInterval=MilliSeconds (max_interval);
+										pktInterval=MilliSeconds (max_interval);
 #else
-                                  pktInterval=MilliSeconds (100);//control code
+										pktInterval=MilliSeconds (100);//control code
 #endif
-                                }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        out2.close();
-        //std::cout << "Packet Interval: " << pktInterval << '\n';
-      // every BSM must be scheduled with a tx time delay
-      // of +/- (5) ms.  See comments in StartApplication().
-      // we handle this as a tx delay of [0..10] ms
-      // from the start of the pktInterval boundary
-      uint32_t d_ns = static_cast<uint32_t> (m_txMaxDelay.GetInteger ());
-      Time txDelay = NanoSeconds (m_unirv->GetInteger (0, d_ns));
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		out2.close();
+		//std::cout << "Packet Interval: " << pktInterval << '\n';
+		// every BSM must be scheduled with a tx time delay
+		// of +/- (5) ms.  See comments in StartApplication().
+		// we handle this as a tx delay of [0..10] ms
+		// from the start of the pktInterval boundary
+		uint32_t d_ns = static_cast<uint32_t> (m_txMaxDelay.GetInteger ());
+		Time txDelay = NanoSeconds (m_unirv->GetInteger (0, d_ns));
 
-      // do not want the tx delay to be cumulative, so
-      // deduct the previous delay value.  thus we adjust
-      // to schedule the next event at the next pktInterval,
-      // plus some new [0..10] ms tx delay
-      Time txTime = pktInterval - m_prevTxDelay + txDelay;
-      m_prevTxDelay = txDelay;
-      //std::cout << "Node ID:" << socket->GetNode ()->GetId () << " MsgID:" << temp_MsgID << " TxTime:" << txTime << '\n';
-      //std::cout << "/* packet count */" << pktCount <<'\n';
-      Simulator::ScheduleWithContext (socket->GetNode ()->GetId (),
-                                      txTime, &BsmApplication::GeneratePriorityWaveTraffic, this,
-                                      socket, pktSize, pktCount - 1, pktInterval,  socket->GetNode ()->GetId ());
-    }
-  else
-    {
-      std::cout << "/* Simulation Finished at time */" << (Simulator::Now ()).GetSeconds () << std::endl;
-      socket->Close ();
-    }
+		// do not want the tx delay to be cumulative, so
+		// deduct the previous delay value.  thus we adjust
+		// to schedule the next event at the next pktInterval,
+		// plus some new [0..10] ms tx delay
+		Time txTime = pktInterval - m_prevTxDelay + txDelay;
+		m_prevTxDelay = txDelay;
+		Simulator::ScheduleWithContext (socket->GetNode ()->GetId (),
+				txTime, &BsmApplication::GeneratePriorityWaveTraffic, this,
+				socket, pktSize, pktCount - 1, pktInterval,  socket->GetNode ()->GetId ());
+	}
+	else
+	{
+		std::cout << "/* Simulation Finished at time */" << (Simulator::Now ()).GetSeconds () << std::endl;
+		socket->Close ();
+	}
 }
+
 int BsmApplication::GetPriorityLevel(int sendingNodeId)
 {
   int txNodeId = sendingNodeId;
@@ -1218,7 +959,6 @@ double BsmApplication::GetAdaptivePriorityLevel(int sendingNodeId, int rxNodeId)
   int senderMoving = m_nodesMoving->at (txNodeId);
   if (senderMoving != 0)
   {
-    //int nRxNodes = m_adhocTxInterfaces->GetN ();
     Ptr<Node> rxNode = GetNode (rxNodeId);
 
     if (rxNodeId != txNodeId)
@@ -1256,11 +996,6 @@ double BsmApplication::GetAdaptivePriorityLevel(int sendingNodeId, int rxNodeId)
         //ttc=(distSq/rel_vel);
         if (distSq > 0.0)
         {
-          //int rangeCount = m_txSafetyRangesSq.size ();
-          //for (int index = 1; index <= rangeCount; index++)
-          //{
-          //if (distSq <= m_txSafetyRangesSq[index - 1])
-          //{
           if ((ttc < ttc_thres) && (std::abs(posm_rx.y-posm_tx.y)<m_lane_thres)){
             //std::cout << "ttcHP : " << ttc << std::endl;
             //std::cout << "priority 5 ttc: " << ttc << std::endl;
@@ -1275,8 +1010,6 @@ double BsmApplication::GetAdaptivePriorityLevel(int sendingNodeId, int rxNodeId)
               priority = p;
             //std::cout << "Adaptive priority "<< priority <<" c constant: " << c << " other constant" << (max_priority - min_priority)/(ttc_thres_upper - ttc_thres) << " max priority " << max_priority << " ttc_thres: "  << ttc_thres << " ttc_thres_upper: " << ttc_thres_upper << " ttc: " << ttc <<'\n';
           }
-          //}
-          //}
         }
       }
     }
@@ -1329,64 +1062,57 @@ double BsmApplication::GetTTC(int sendingNodeId, int rxNodeId)
 
 void BsmApplication::ReceiveWavePacket (Ptr<Socket> socket)
 {
-  NS_LOG_FUNCTION (this);
+	NS_LOG_FUNCTION (this);
 
-  Ptr<Packet> packet;
-  Address senderAddr;
-  while ((packet = socket->RecvFrom (senderAddr)))
-    {
-      //SeqTsHeader seqTsx;
-      //packet->RemoveHeader (seqTsx);
-      MyTag tag;
-		  packet->PeekPacketTag(tag);
+	Ptr<Packet> packet;
+	Address senderAddr;
+	while ((packet = socket->RecvFrom (senderAddr)))
+	{
+		MyTag tag;
+		packet->PeekPacketTag(tag);
+		Ptr<Node> rxNode = socket->GetNode ();
 
-      //uint32_t currentSequenceNumber = seqTsx.GetSeq ();
-      //double rcv = Simulator::Now().GetMilliSeconds();
-      //double sqhd = seqTsx.GetTs().GetMilliSeconds();
-      //double delay =rcv-sqhd;
+		if (InetSocketAddress::IsMatchingType (senderAddr))
+		{
+			InetSocketAddress addr = InetSocketAddress::ConvertFrom (senderAddr);
+			int nodes = m_adhocTxInterfaces->GetN ();
+			for (int i = 0; i < nodes; i++)
+			{
+				if (addr.GetIpv4 () == m_adhocTxInterfaces->GetAddress (i) )
+				{
+					Ptr<Node> txNode = GetNode (i);
+					int txNodeId = txNode->GetId ();
 
-      //std::cout << "tag ID " << tag.GetNodeId() << " priority " << tag.GetPrio() << " MsgID " << tag.GetMsgId() <<std::endl;
-      Ptr<Node> rxNode = socket->GetNode ();
+					int priority_hp;
+					priority_hp=GetPriorityLevel(txNodeId,rxNode->GetId ());
 
-      if (InetSocketAddress::IsMatchingType (senderAddr))
-        {
-          InetSocketAddress addr = InetSocketAddress::ConvertFrom (senderAddr);
-          int nodes = m_adhocTxInterfaces->GetN ();
-          for (int i = 0; i < nodes; i++)
-            {
-              if (addr.GetIpv4 () == m_adhocTxInterfaces->GetAddress (i) )
-                {
-                  Ptr<Node> txNode = GetNode (i);
-                  int txNodeId = txNode->GetId ();
-
-                  int priority_hp;
-                  priority_hp=GetPriorityLevel(txNodeId,rxNode->GetId ());
-
-                  int receiverMoving = m_nodesMoving->at (rxNode->GetId ());
-                  if (receiverMoving == 1){
-                    PacketInfo * pinfo = new PacketInfo();
-                    pinfo->SetLagTime(Simulator::Now().GetMilliSeconds());//-tag.GetEmitTime()
-                    pinfo->SetSendPriority(tag.GetPrio());
-                    pinfo->SetRecvPriority(priority_hp);
-                    pinfo->m_msgId=tag.GetMsgId();
-                    pinfo->m_txNodeId=txNodeId;
-                    pinfo->m_rxNodeId=rxNode->GetId ();
-                    PacketList.push_back(pinfo);
-                  }
+					int receiverMoving = m_nodesMoving->at (rxNode->GetId ());
+					if (receiverMoving == 1){
+						PacketInfo * pinfo = new PacketInfo();
+						pinfo->SetLagTime(Simulator::Now().GetMilliSeconds());//-tag.GetEmitTime()
+						pinfo->SetSendPriority(tag.GetPrio());
+						pinfo->SetRecvPriority(priority_hp);
+						pinfo->m_msgId=tag.GetMsgId();
+						pinfo->m_txNodeId=txNodeId;
+						pinfo->m_rxNodeId=rxNode->GetId ();
+						PacketList.push_back(pinfo);
+					}
 
 
-                  if(m_prioritytag){
-                    HandlePriorityReceivedBsmPacket (txNode, rxNode, txNodeId, rxNode->GetId (), tag.GetPrio());
-                  }
-                  else{
-                    HandleReceivedBsmPacket (txNode, rxNode);
-                  }
+					if(m_prioritytag){
+						HandlePriorityReceivedBsmPacket (txNode, rxNode, txNodeId, rxNode->GetId (), tag.GetPrio());
+					}
+					else{
+						HandleReceivedBsmPacket (txNode, rxNode);
+					}
 
-                }
-            }
-        }
-    }
+				}
+			}
+		}
+	}
 }
+
+
 void BsmApplication::ReceiveAdaptiveWavePacket (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this);
@@ -1395,17 +1121,8 @@ void BsmApplication::ReceiveAdaptiveWavePacket (Ptr<Socket> socket)
   Address senderAddr;
   while ((packet = socket->RecvFrom (senderAddr)))
     {
-      //SeqTsHeader seqTsx;
-      //packet->RemoveHeader (seqTsx);
       MyTag tag;
 		  packet->PeekPacketTag(tag);
-
-      //uint32_t currentSequenceNumber = seqTsx.GetSeq ();
-      //double rcv = Simulator::Now().GetMilliSeconds();
-      //double sqhd = seqTsx.GetTs().GetMilliSeconds();
-      //double delay =rcv-sqhd;
-
-      //std::cout << "tag ID " << tag.GetNodeId() << " priority " << tag.GetPrio() << " MsgID " << tag.GetMsgId() <<std::endl;
       Ptr<Node> rxNode = socket->GetNode ();
 
       double ttc=0;
@@ -1426,7 +1143,6 @@ void BsmApplication::ReceiveAdaptiveWavePacket (Ptr<Socket> socket)
                   int receiverMoving = m_nodesMoving->at (rxNode->GetId ());
                   if (receiverMoving == 1){
                     PacketInfo * pinfo = new PacketInfo();
-                    //std::cout << "in adaptive received packet" << '\n';
                     pinfo->SetLagTime(Simulator::Now().GetMilliSeconds()-tag.GetEmitTime());//-tag.GetEmitTime()
                     pinfo->SetSendPriority(tag.GetPrio());
                     pinfo->SetRecvPriority(priority_hp);
@@ -1436,28 +1152,18 @@ void BsmApplication::ReceiveAdaptiveWavePacket (Ptr<Socket> socket)
                     pinfo->m_sysTime=Simulator::Now().GetSeconds();
 
                     //ttc code
-                    //double distSq = MobilityHelper::GetDistanceSquaredBetween (txNode, rxNode);
-
                     Ptr<MobilityModel> txPosition = txNode->GetObject<MobilityModel> ();
                     NS_ASSERT (txPosition != 0);
                     Vector pos = txPosition->GetPosition(); // Get velocity
                     Vector vel = txPosition->GetVelocity(); // Get velocity
-                    //double node_speed;
-                    //node_speed = vel.x * vel.x + vel.y * vel.y + vel.z * vel.z;
 
                     Ptr<MobilityModel> rxPosition = rxNode->GetObject<MobilityModel> ();
                     NS_ASSERT (rxPosition != 0);
                     Vector pos_rx = rxPosition->GetPosition(); // Get velocity
                     Vector vel_rx = rxPosition->GetVelocity(); // Get velocity
-                    //double node_speed_rx;
-                    //node_speed_rx = vel_rx.x * vel_rx.x + vel_rx.y * vel_rx.y + vel_rx.z * vel_rx.z;
-                    //double rel_vel=(std::abs(node_speed-node_speed_rx));
-                    //ttc=std::sqrt(distSq/rel_vel);
-                    //double BsmApplication::GetTTC(int sendingNodeId, int rxNodeId)
                     ttc=GetTTC(txNodeId,rxNode->GetId ());
                     pinfo->m_txspeed=vel.x;
                     pinfo->m_rxspeed=vel_rx.x;
-                    //std::cout << "rx distance:" << distSq << " rx ttc:" << ttc << " relative velocity: "<< rel_vel << "tx velocity "<< node_speed <<"rx velocity "<< node_speed_rx << '\n';
                     pinfo->m_ttc=ttc;
                     pinfo->m_dist=std::abs(pos.x-pos_rx.x);
                     //add in ttc
@@ -1678,32 +1384,44 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
 	if(( (std::abs(posm_rx.y-posm_tx.y)<=m_lane_thres) && (posm_rx.x <= posm_tx.x) && (vel_rx.x > vel_tx.x)) ||
 			( (std::abs(posm_rx.y-posm_tx.y)<=m_lane_thres) && (posm_tx.x <= posm_rx.x) && (vel_tx.x > vel_rx.x)))
 	{
-		std::cout << " Time: " << Simulator::Now().GetMilliSeconds () << " rxNode: " << rxNodeId << " txNode: " << txNodeId
-				<< " POSRX: x=" << posm_rx.x << ", y=" << posm_rx.y << " POSTX: x=" << posm_tx.x << ", y=" << posm_tx.y << "vel_rx: " << vel_rx.x
-				<< "  vel_tx: " << vel_tx.x << " priority: "<< priority_rxtx << " ttc: " << temp_ttc <<'\n';
-		if (!NodeInBetween(txNodeId,rxNodeId)) {
+		std::cout << " Time: " << Simulator::Now().GetMilliSeconds () << " txNode: " << txNodeId  << "(x=" << posm_tx.x << " y=" << posm_tx.y
+				<< "  vel=" << vel_tx.x << ") "
+				<< " rxNode: " << rxNodeId
+				<< "(x=" << posm_rx.x << " y=" << posm_rx.y  << " vel=" << vel_rx.x << ") "
+				<< " priority: "<< priority_rxtx << " ttc: " << temp_ttc << " logx_recv" << std::endl;
+		//if (!NodeInBetween(txNodeId,rxNodeId)) {
 		if (temp_ttc<crash_thres) {
 			crashes++;
 			double now_time = Simulator::Now().GetMilliSeconds();
 			if( now_time - last_crash < 2000){
-				std::cout << "early crash " << crashes << " ttc: " << temp_ttc<< " priorityrxtx: " << priority_rxtx << " priority: " << priority << std::endl ;
+				std::cout << "early crash " << crashes  << " txNode: " << txNodeId  << " rxNode: " << rxNodeId << " ttc: " << temp_ttc<< " priorityrxtx: "
+						  << priority_rxtx << " priority: " << priority  << " logx_recv" << std::endl ;
 				mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
 				mob_tx->SetVelocity(Vector(vel_rx.x,0.0,0.0));
 			}
 			else {
 				last_crash = now_time;
-				std::cout << "crash occurred" << crashes << " ttc: " << temp_ttc<< " priorityrxtx: " << priority_rxtx << " priority: " << priority << std::endl ;
+				std::cout << "crash occurred" << crashes  << " txNode: " << txNodeId  << " rxNode: " << rxNodeId << " ttc: " << temp_ttc<< " priorityrxtx: "
+						 << priority_rxtx << " priority: " << priority << " logx_recv" << std::endl ;
 				ReInitNodes();
 			}
 		}
 		else {
-			//if (!NodeInBetween(txNodeId,rxNodeId)) {
-			manuevers++;
-			std::cout << "corrc occurred" << manuevers << " ttc: " << temp_ttc<< " priorityrxtx: " << priority_rxtx << " priority: " << priority << std::endl ;
-			mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
-			//}
+			if (!NodeInBetween(txNodeId,rxNodeId)) {
+				manuevers++;
+				std::cout << "corrc occurred" << manuevers  << " txNode: " << txNodeId  << " rxNode: " << rxNodeId << " ttc: " << temp_ttc<< " priorityrxtx: "
+						<< priority_rxtx << " priority: " << priority << " logx_recv" << std::endl ;
+				if ( (posm_rx.x <= posm_tx.x) && (vel_rx.x > vel_tx.x))
+					mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
+				else
+					mob_tx->SetVelocity(Vector(vel_rx.x,0.0,0.0));
+			}
+			else {
+				std::cout << "corrc skipped" << manuevers  << " txNode: " << txNodeId  << " rxNode: " << rxNodeId << " ttc: " << temp_ttc<< " priorityrxtx: "
+						<< priority_rxtx << " priority: " << priority << " logx_recv" << std::endl ;
+			}
 		}
-		}
+		//}
 	}
 
 	NS_ASSERT (rxPosition != 0);
@@ -1716,10 +1434,7 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
 	if (receiverMoving == 1)
 	{
 		double rxDistSq = MobilityHelper::GetDistanceSquaredBetween (rxNode, txNode);
-		//std::cout << "Receiver Distance between nodes " << rxDistSq <<'\n';
-		//todo: int prio = getPrio(txNode);
-		//todo: int base = (prio == 1) ? 0 : 10;
-		//NS_LOG_UNCOND ("Time "<<(Simulator::Now()).GetSeconds()<<" tx velocity" << txPosition->GetVelocity());
+
 		if (rxDistSq > 0.0)
 		{
 			int rangeCount = m_txSafetyRangesSq.size ();
@@ -1984,223 +1699,18 @@ void printAppStats(std::string CSVfileName3){
 
   out4.close ();
 
+#ifdef ADAPTIVE_PRIO
+  std::cout << "end of ADAPTIVE_PRIO crash run" << std::endl;
+#else
+  std::cout << "end of reference crash run" << std::endl;
+#endif
   //std::cout << "hptx count" << hptx_count << '\n';
   //std::cout << "Hp2HP count" << hp2hp_count << '\n';
   //std::cout << "HP count" << hp_count << '\n';
   //std::cout << "lp count" << lp_count << '\n';
   //std::cout << "LPtx count" << lptx_count << '\n';
 }
-/*void printAppStats(std::string CSVfileName3){
-  //std::ofstream out (CSVfileName3.c_str (), std::ios::app);
-  std::ofstream out (CSVfileName3.c_str ());
-  std::string CSVfileName4 =CSVfileName3+"_msgStats.csv";
-  std::string CSVfileName5 =CSVfileName3+"_msgStats2.csv";
-  std::string CSVfileName6 =CSVfileName3+"_msgStats3.csv";
-  std::ofstream out2 (CSVfileName4.c_str ());
-  std::ofstream out3 (CSVfileName5.c_str ());
-  std::ofstream out4 (CSVfileName6.c_str ());
-  //std::cout << "In BSM APP Stats" << std::endl;
-  int hp2hp_count=0;
-  int lp_count=0;
-  int hp_count=0;
-  double hp2hp_delay=0;
-  double hp_delay=0;
-  double lp_delay=0;
-  int hptx_count=0;
-  int lptx_count=0;
-  int tempID=0;
 
-  uint32_t tempID_msg=0;
-  int hp2hp_count_msg=0;
-  int hp_count_msg=0;
-  int lp_count_msg=0;
-  //int hptx_count_msg=0;
-  //int lptx_count_msg=0;
-
-  double hp2hp_delay_msg=0;
-  double hp_delay_msg=0;
-  double lp_delay_msg=0;
-
-  double min_ttc;
-
-  std::map <uint32_t, PacketInfo *> hp_Vehiclelist;
-
-
-  out << "hptx_count"<< "," << "lptx_count"<< "," << "hp2hp_count" << ","<< "hp_count" << "," << "lp_count" << "," << "hp2hp_delay" << "," << "hp_delay" << "," << "lp_delay" << "crashes" << std::endl;
-
-  out2 << "Msg ID" << "," << "TxNode"<< "," << "RxNode" << "," << "TxPriority" << "," << "RxPriority" << "," << "Delay" << "," << "ttc" << "," << "dist" <<"," << "tx_vel" << "," << "rx_vel" << "," << "Sys_time" << std::endl;
-
-  out4 << "Msg_ID" << "," << "TxNode"<< "," << "RxNode" << "," << "ttc" << "," << "Sys_time" << "," <<  "Msg_recv"<< std::endl;
-
-  out3 << "Msg ID" << ","<< "TxNode" <<","<< "hp2hp_count" << ","<< "hp_count" << "," << "lp_count" << "," << "hp2hp_delay_msg" << "," << "hp_delay_msg" << "," << "lp_delay_msg" << std::endl;
-
-  //std::cout << "dropped packets" << dropped_packets<< '\n';
-  for (std::vector<PacketInfo>::iterator it = PacketList.begin() ; it != PacketList.end(); ++it){
-      //std::cout << "Msg ID " << it->m_msgId << " TxNode "<< it->m_txNodeId << " RxNode " << it->m_rxNodeId << " TxPriority " << it->m_txpriority << " RxPriority " << it->m_rxpriority << " Rxtime " << it->m_lag_time<<'\n';
-      //std::cout << "iterator:" << it << '\n';
-      //std::cout << "hp packetlist end:" << hp_PacketList.end() << '\n';
-      out2 << it->m_msgId << "," << it->m_txNodeId<< "," << it->m_rxNodeId << ","<< it->m_txpriority << "," << it->m_rxpriority <<"," << it->m_lag_time << "," << it->m_ttc <<"," << it->m_dist <<"," << it->m_txspeed <<"," << it->m_rxspeed << "," << it->m_sysTime << std::endl;
-
-      if(it->m_txpriority==5){
-        if((int)tempID <= (int)it->m_msgId){
-          tempID=it->m_msgId;
-          hptx_count++;
-        }
-        if(tempID_msg!=it->m_msgId){
-          tempID_msg=it->m_msgId;
-          hp2hp_delay_msg=hp2hp_delay_msg/((double)hp2hp_count_msg);
-          hp_delay_msg=hp_delay_msg/((double)hp_count_msg);
-          lp_delay_msg=lp_delay_msg/((double)lp_count_msg);
-
-          if(std::isnan(hp2hp_delay_msg)){
-            hp2hp_delay_msg=-1;
-          }
-          if(std::isnan(hp_delay_msg)){
-            hp_delay_msg=-1;
-          }
-          if(std::isnan(lp_delay_msg)){
-            lp_delay_msg=-1;
-          }
-          out3 << it->m_msgId << "," << it->m_txNodeId <<","<< hp2hp_count_msg << ","<< hp_count_msg << "," << lp_count_msg << "," << hp2hp_delay_msg << "," << hp_delay_msg << ","<<lp_delay_msg << std::endl;
-
-          hp2hp_count_msg=0;
-          hp_count_msg=0;
-          lp_count_msg=0;
-          //hptx_count_msg=0;
-          //lptx_count_msg=0;
-          hp2hp_delay_msg=0;
-          hp_delay_msg=0;
-          lp_delay_msg=0;
-          min_ttc=0;
-        }
-
-        if(it->m_rxpriority==it->m_txpriority){
-          hp2hp_count++;
-          hp2hp_count_msg++;
-          hp2hp_delay=hp2hp_delay+it->m_lag_time;
-          hp2hp_delay_msg=hp2hp_delay_msg+it->m_lag_time;
-          if(min_ttc>it->m_ttc){
-              min_ttc=it->m_ttc;
-          }
-          if(min_ttc==0){
-            min_ttc=it->m_ttc;
-          }
-
-
-        }
-        else{
-          hp_count++;
-          hp_count_msg++;
-          hp_delay=hp_delay+it->m_lag_time;
-          hp_delay_msg=hp_delay_msg+it->m_lag_time;
-          if(min_ttc>it->m_ttc){
-              min_ttc=it->m_ttc;
-          }
-          if(min_ttc==0){
-            min_ttc=it->m_ttc;
-          }
-        }
-      }
-      else{
-        if((int)tempID <= (int)it->m_msgId){
-          tempID=it->m_msgId;
-          lptx_count++;
-        }
-        if(tempID_msg!=it->m_msgId){
-          tempID_msg=it->m_msgId;
-          hp2hp_delay_msg=hp2hp_delay_msg/((double)hp2hp_count_msg);
-          hp_delay_msg=hp_delay_msg/((double)hp_count_msg);
-          lp_delay_msg=lp_delay_msg/((double)lp_count_msg);
-
-          if(std::isnan(hp2hp_delay_msg)){
-            hp2hp_delay_msg=-1;
-          }
-          if(std::isnan(hp_delay_msg)){
-            hp_delay_msg=-1;
-          }
-          if(std::isnan(lp_delay_msg)){
-            lp_delay_msg=-1;
-          }
-          out3 << it->m_msgId << "," << it->m_txNodeId <<","<< hp2hp_count_msg << ","<< hp_count_msg << "," << lp_count_msg << "," << hp2hp_delay_msg << "," << hp_delay_msg << ","<<lp_delay_msg << std::endl;
-
-          hp2hp_count_msg=0;
-          hp_count_msg=0;
-          lp_count_msg=0;
-          //hptx_count_msg=0;
-          //lptx_count_msg=0;
-          hp2hp_delay_msg=0;
-          hp_delay_msg=0;
-          lp_delay_msg=0;
-          min_ttc=0;
-        }
-        lp_count++;
-        lp_count_msg++;
-        lp_delay=lp_delay+it->m_lag_time;
-        lp_delay_msg=lp_delay_msg+it->m_lag_time;
-        if(min_ttc>it->m_ttc){
-            min_ttc=it->m_ttc;
-        }
-        if(min_ttc==0){
-          min_ttc=it->m_ttc;
-        }
-      }
-
-  }
-  hp2hp_delay=hp2hp_delay/((double)hp2hp_count);
-  hp_delay=hp_delay/((double)hp_count);
-  lp_delay=lp_delay/((double)lp_count);
-  out << hptx_count<< "," << lptx_count<< "," << hp2hp_count << ","<< hp_count << "," << lp_count << "," << hp2hp_delay << "," << hp_delay << ","<<lp_delay << "," << crashes << std::endl;
-  out.close ();
-  out2.close ();
-  out3.close ();
-
-
-  int hp_counti=0;
-  int dropped_packets=0;
-  std::map<uint32_t, PacketInfo *> Nodes_dropped;//=it_hp->second->NodesInRange;
-  for (std::map< uint32_t, PacketInfo *>::iterator it_hp = hp_PacketList.begin() ; it_hp != hp_PacketList.end(); ++it_hp){
-    hp_counti=it_hp->second->m_msgId;
-    //int sz = hp_PacketList[hp_counti]->NodesInRange.size();
-    int sz = it_hp->second->NodesInRange.size();
-    if(sz>0){
-      std::map<uint32_t, uint32_t> Nodes_recv;//=it_hp->second->NodesInRange;
-
-      for(std::vector<uint32_t>::iterator it_hp2 = it_hp->second->NodesInRange.begin() ; it_hp2 != it_hp->second->NodesInRange.end(); ++it_hp2){
-        Nodes_recv[*it_hp2]=0;
-        for (std::vector<PacketInfo>::iterator it = PacketList.begin() ; it != PacketList.end(); ++it){
-          if(it->m_msgId==it_hp->second->m_msgId){
-            if(it->m_rxNodeId== *it_hp2){
-              //std::cout << "it_Hp " << *it_hp2 << " received packetnodeid "<< it->m_rxNodeId << '\n';
-              sz--;
-              //Nodes_dropped[it->m_rxNodeId]=1;
-              Nodes_recv[*it_hp2]=1;
-              out4 << it_hp->second->m_msgId << "," << it_hp->second->m_txNodeId<< "," << *it_hp2 << ","<< it_hp->second->TTCInRange[*it_hp2] << ","<< it_hp->second->m_sysTime <<","<< Nodes_recv[*it_hp2] << "," << it_hp->second->DistInRange[*it_hp2] << std::endl;
-            }
-          }
-
-        }
-      }
-      for(std::vector<uint32_t>::iterator it_hp2 = it_hp->second->NodesInRange.begin() ; it_hp2 != it_hp->second->NodesInRange.end(); ++it_hp2){
-          if(Nodes_recv[*it_hp2]==0){
-            out4 << it_hp->second->m_msgId << "," << it_hp->second->m_txNodeId<< "," << *it_hp2 << ","<< it_hp->second->TTCInRange[*it_hp2] << ","<< it_hp->second->m_sysTime <<","<< Nodes_recv[*it_hp2] << "," << it_hp->second->DistInRange[*it_hp2] << std::endl;
-            //Nodes_dropped[]
-          }
-      }
-    }
-    if(sz!=0){
-      std::cout << "size " << sz << '\n';
-      dropped_packets++;
-    }
-  }*/
-
-//  out4.close ();
-/*
-  std::cout << "hptx count" << hptx_count << '\n';
-  std::cout << "Hp2HP count" << hp2hp_count << '\n';
-  std::cout << "HP count" << hp_count << '\n';
-  std::cout << "lp count" << lp_count << '\n';
-  std::cout << "LPtx count" << lptx_count << '\n';*/
-//}
 void SetupLogFile(std::string CSVfileName3){
   m_CSVfileName3=CSVfileName3;
 
