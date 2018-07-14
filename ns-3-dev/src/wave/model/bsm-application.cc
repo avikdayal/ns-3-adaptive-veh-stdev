@@ -1580,13 +1580,14 @@ bool BsmApplication::NodeInBetween (int nid1, int nid2) {
 
 	Ptr<ConstantVelocityMobilityModel> mob_n1 = node1-> GetObject<ConstantVelocityMobilityModel>();
 	Ptr<ConstantVelocityMobilityModel> mob_n2 = node2-> GetObject<ConstantVelocityMobilityModel>();
-	int  n1_pos = (mob_n1->GetPosition ()).x;
-	int  n2_pos = (mob_n2->GetPosition ()).x;
-	int x1 = n1_pos;
-	int x2 = n2_pos;
-	if (n1_pos > n2_pos){
-		x1 = n2_pos;
-		x2 = n1_pos;
+	int  n1_posx = (mob_n1->GetPosition ()).x;
+	int  n1_posy = (mob_n1->GetPosition ()).y;
+	int  n2_posx = (mob_n2->GetPosition ()).x;
+	int x1 = n1_posx;
+	int x2 = n2_posx;
+	if (n1_posx > n2_posx){
+		x1 = n2_posx;
+		x2 = n1_posx;
 	}
     int nodes = m_adhocTxInterfaces->GetN ();
     for (int i = 0; i < nodes; i++)
@@ -1597,8 +1598,10 @@ bool BsmApplication::NodeInBetween (int nid1, int nid2) {
     	}
     	Ptr<Node> cnode = GetNode (i);
     	Ptr<ConstantVelocityMobilityModel> mob_c = cnode-> GetObject<ConstantVelocityMobilityModel>();
-    	int c_pos = (mob_c->GetPosition ()).x;
-    	if (x1 <= c_pos && c_pos <= x2){
+    	int c_posx = (mob_c->GetPosition ()).x;
+    	int c_posy = (mob_c->GetPosition ()).y;
+
+    	if ((std::abs(n1_posy-c_posy)<=m_lane_thres) && (x1 <= c_posx) && (c_posx <= x2)){
     		std::cout << "nodes in between n1=" << nid1 << " c=" << i << " n2=" << nid2 << std::endl;
     		return true;
     	}
@@ -1678,7 +1681,7 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
 		std::cout << " Time: " << Simulator::Now().GetMilliSeconds () << " rxNode: " << rxNodeId << " txNode: " << txNodeId
 				<< " POSRX: x=" << posm_rx.x << ", y=" << posm_rx.y << " POSTX: x=" << posm_tx.x << ", y=" << posm_tx.y << "vel_rx: " << vel_rx.x
 				<< "  vel_tx: " << vel_tx.x << " priority: "<< priority_rxtx << " ttc: " << temp_ttc <<'\n';
-		//if (!NodeInBetween(txNodeId,rxNodeId)) {
+		if (!NodeInBetween(txNodeId,rxNodeId)) {
 		if (temp_ttc<crash_thres) {
 			crashes++;
 			double now_time = Simulator::Now().GetMilliSeconds();
@@ -1700,7 +1703,7 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
 			mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
 			//}
 		}
-		//}
+		}
 	}
 
 	NS_ASSERT (rxPosition != 0);
