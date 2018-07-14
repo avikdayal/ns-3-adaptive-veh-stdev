@@ -15,12 +15,27 @@ load hp_PDR_SR_3_control;
 load hp_PDR_SR_5_control;
 load hp_PDR_SR_7_control;
 %% Initialize variables.
-filename_20n = '/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-beacon-rate/ns-3-dev/bsm_20node_cvgauss.output2.csv';
-filename_40n = '/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-beacon-rate/ns-3-dev/bsm_40node_cvgauss.output2.csv';
-filename_60n = '/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-beacon-rate/ns-3-dev/bsm_60node_cvgauss.output2.csv';
-filename_80n = '/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-beacon-rate/ns-3-dev/bsm_80node_cvgauss.output2.csv';
-filename_120n = '/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-beacon-rate/ns-3-dev/bsm_120node_cvgauss.output2.csv';
-filename_160n = '/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-beacon-rate/ns-3-dev/bsm_160node_cvgauss.output2.csv';
+filename_20n = '/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-adaptive-veh/ns-3-dev/bsm_20node_cvgauss.output2.csv';
+filename_40n = '/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-adaptive-veh/ns-3-dev/bsm_40node_cvgauss.output2.csv';
+filename_60n = '/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-adaptive-veh/ns-3-dev/bsm_60node_cvgauss.output2.csv';
+filename_80n = '/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-adaptive-veh/ns-3-dev/bsm_80node_cvgauss.output2.csv';
+filename_120n = '/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-adaptive-veh/ns-3-dev/bsm_120node_cvgauss.output2.csv';
+filename_160n = '/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-adaptive-veh/ns-3-dev/bsm_160node_cvgauss.output2.csv';
+
+filename_20n_2 = '/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-adaptive-veh/ns-3-dev/bsm_20node_cvgauss.output3.csv';
+filename_40n_2 = '/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-adaptive-veh/ns-3-dev/bsm_40node_cvgauss.output3.csv';
+filename_60n_2 = '/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-adaptive-veh/ns-3-dev/bsm_60node_cvgauss.output3.csv';
+filename_80n_2 = '/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-adaptive-veh/ns-3-dev/bsm_80node_cvgauss.output3.csv';
+filename_120n_2 = '/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-adaptive-veh/ns-3-dev/bsm_120node_cvgauss.output3.csv';
+filename_160n_2 = '/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-adaptive-veh/ns-3-dev/bsm_160node_cvgauss.output3.csv';
+
+filename_20n_c2 = '/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-adaptive-veh/ns-3-dev/bsm_control_20node_cvgauss.output3.csv';
+filename_40n_c2 = '/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-adaptive-veh/ns-3-dev/bsm_control_40node_cvgauss.output3.csv';
+filename_60n_c2 = '/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-adaptive-veh/ns-3-dev/bsm_control_60node_cvgauss.output3.csv';
+filename_80n_c2 = '/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-adaptive-veh/ns-3-dev/bsm_control_80node_cvgauss.output3.csv';
+filename_120n_c2 = '/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-adaptive-veh/ns-3-dev/bsm_control_120node_cvgauss.output3.csv';
+filename_160n_c2 = '/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-adaptive-veh/ns-3-dev/bsm_control_160node_cvgauss.output3.csv';
+
 %filename_200n = '/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-beacon-rate/ns-3-dev/bsm_160node_cvgauss.output2.csv';
 
 delimiter = ',';
@@ -54,16 +69,28 @@ startRow = 2;
 % For more information, see the TEXTSCAN documentation.
 formatSpec = '%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f';
 formatSpec_40n = '%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f';
+%formatSpec_80n = '%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f';
 formatSpec_80n = '%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f';
 formatSpec_120n = '%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f';
 formatSpec_160n = '%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f';
-
+formatSpec_2 = '%f%f%f%f%f%f%f%f%f%[^\n\r]';
 %% Open the text file.
 fileID = fopen(filename_20n,'r');
 fileID_40n = fopen(filename_40n,'r');
 fileID_80n = fopen(filename_80n,'r');
 fileID_120n = fopen(filename_120n,'r');
 fileID_160n = fopen(filename_160n,'r');
+%% Open the text file.
+fileID_2 = fopen(filename_20n_2,'r');
+fileID_40n_2 = fopen(filename_40n_2,'r');
+fileID_80n_2 = fopen(filename_80n_2,'r');
+fileID_120n_2 = fopen(filename_120n_2,'r');
+fileID_160n_2 = fopen(filename_160n_2,'r');
+fileID_c2 = fopen(filename_20n_c2,'r');
+fileID_40n_c2 = fopen(filename_40n_c2,'r');
+fileID_80n_c2 = fopen(filename_80n_c2,'r');
+fileID_120n_c2 = fopen(filename_120n_c2,'r');
+fileID_160n_c2 = fopen(filename_160n_c2,'r');
 %% Read columns of data according to the format.
 % This call is based on the structure of the file used to generate this
 % code. If an error occurs for a different file, try regenerating the code
@@ -73,6 +100,16 @@ dataArray_40n = textscan(fileID_40n, formatSpec_40n, 'Delimiter', delimiter, 'He
 dataArray_80n = textscan(fileID_80n, formatSpec_80n, 'Delimiter', delimiter, 'HeaderLines' ,startRow-1, 'ReturnOnError', false, 'EndOfLine', '\r\n');
 dataArray_120n = textscan(fileID_120n, formatSpec_160n, 'Delimiter', delimiter, 'HeaderLines' ,startRow-1, 'ReturnOnError', false, 'EndOfLine', '\r\n');
 dataArray_160n = textscan(fileID_160n, formatSpec_160n, 'Delimiter', delimiter, 'HeaderLines' ,startRow-1, 'ReturnOnError', false, 'EndOfLine', '\r\n');
+dataArray_2 = textscan(fileID_2, formatSpec_2, 'Delimiter', delimiter, 'HeaderLines' ,startRow-1, 'ReturnOnError', false, 'EndOfLine', '\r\n');
+dataArray_40n_2 = textscan(fileID_40n_2, formatSpec_2, 'Delimiter', delimiter, 'HeaderLines' ,startRow-1, 'ReturnOnError', false, 'EndOfLine', '\r\n');
+dataArray_80n_2 = textscan(fileID_80n_2, formatSpec_2, 'Delimiter', delimiter, 'HeaderLines' ,startRow-1, 'ReturnOnError', false, 'EndOfLine', '\r\n');
+dataArray_120n_2 = textscan(fileID_120n_2, formatSpec_2, 'Delimiter', delimiter, 'HeaderLines' ,startRow-1, 'ReturnOnError', false, 'EndOfLine', '\r\n');
+dataArray_160n_2 = textscan(fileID_160n_2, formatSpec_2, 'Delimiter', delimiter, 'HeaderLines' ,startRow-1, 'ReturnOnError', false, 'EndOfLine', '\r\n');
+dataArray_c2 = textscan(fileID_c2, formatSpec_2, 'Delimiter', delimiter, 'HeaderLines' ,startRow-1, 'ReturnOnError', false, 'EndOfLine', '\r\n');
+dataArray_40n_c2 = textscan(fileID_40n_c2, formatSpec_2, 'Delimiter', delimiter, 'HeaderLines' ,startRow-1, 'ReturnOnError', false, 'EndOfLine', '\r\n');
+dataArray_80n_c2 = textscan(fileID_80n_c2, formatSpec_2, 'Delimiter', delimiter, 'HeaderLines' ,startRow-1, 'ReturnOnError', false, 'EndOfLine', '\r\n');
+dataArray_120n_c2 = textscan(fileID_120n_c2, formatSpec_2, 'Delimiter', delimiter, 'HeaderLines' ,startRow-1, 'ReturnOnError', false, 'EndOfLine', '\r\n');
+dataArray_160n_c2 = textscan(fileID_160n_c2, formatSpec_2, 'Delimiter', delimiter, 'HeaderLines' ,startRow-1, 'ReturnOnError', false, 'EndOfLine', '\r\n');
 
 
 %% Close the text file.
@@ -81,6 +118,16 @@ fclose(fileID_40n);
 fclose(fileID_80n);
 fclose(fileID_120n);
 fclose(fileID_160n);
+fclose(fileID_2);
+fclose(fileID_40n_2);
+fclose(fileID_80n_2);
+fclose(fileID_120n_2);
+fclose(fileID_160n_2);
+fclose(fileID_c2);
+fclose(fileID_40n_c2);
+fclose(fileID_80n_c2);
+fclose(fileID_120n_c2);
+fclose(fileID_160n_c2);
 
 %% Post processing for unimportable data.
 % No unimportable data rules were applied during the import, so no post
@@ -89,7 +136,8 @@ fclose(fileID_160n);
 % script.
 
 %% Allocate imported array to column variable names
-safety_range=[50 100 150 200 250 300 350 400 450 500];
+%safety_range=[50 100 150 200 250 300 350 400 450 500];
+safety_range=[25 50 100 200 250 300 350 400 450 500];
 
 BSM_PDR1 = dataArray{:, 1};
 BSM_PDR2 = dataArray{:, 2};
@@ -131,6 +179,18 @@ hp_PDR_120n=output_120n(11:20);
 lp_PDR_160n=output_160n(1:10);
 hp_PDR_160n=output_160n(11:20);
 
+
+crashes=dataArray_2{:, 9};
+crashes_40n=dataArray_40n_2{:, 9};
+crashes_80n=dataArray_80n_2{:, 9};
+crashes_120n=dataArray_120n_2{:, 9};
+crashes_160n=dataArray_160n_2{:, 9};
+crashes_c=dataArray_c2{:, 9};
+crashes_c40n=dataArray_40n_c2{:, 9};
+crashes_c80n=dataArray_80n_c2{:, 9};
+crashes_c120n=dataArray_120n_c2{:, 9};
+crashes_c160n=dataArray_160n_c2{:, 9};
+diff_crashes=[abs(crashes-crashes_c) abs(crashes_40n-crashes_c40n) abs(crashes_80n-crashes_c80n) abs(crashes_120n-crashes_c120n) abs(crashes_160n-crashes_c160n)];
 % figure('rend','painters','pos',[10 10 700 500]);plot(safety_range(1:7), lp_PDR(1:7),'-or');title('Adaptive Rate Packet Delivery Ratio vs Distance');xlabel('Distance (m)');ylabel('Packet Delivery Ratio');
 % hold on;
 % plot(safety_range(1:7), lp_PDR_40n(1:7),'-ob');
@@ -148,13 +208,13 @@ hp_PDR_160n=output_160n(11:20);
 %     '80 nodes-Risk Scheme-At Risk Nodes','120 nodes-Risk Scheme-At Risk Nodes','160 nodes-Risk Scheme-At Risk Nodes');
 
 density=[20 40 80 120 160];
-[safety_range(1) safety_range(3) safety_range(5) safety_range(7)];
-lp_PDR_SR_1=[lp_PDR(1) lp_PDR_40n(1) lp_PDR_80n(1) lp_PDR_120n(1) lp_PDR_160n(1)];
+[safety_range(2) safety_range(3) safety_range(5) safety_range(7)];
+lp_PDR_SR_1=[lp_PDR(2) lp_PDR_40n(2) lp_PDR_80n(2) lp_PDR_120n(2) lp_PDR_160n(2)];
 lp_PDR_SR_3=[lp_PDR(3) lp_PDR_40n(3) lp_PDR_80n(3) lp_PDR_120n(3) lp_PDR_160n(3)];
 lp_PDR_SR_5=[lp_PDR(5) lp_PDR_40n(5) lp_PDR_80n(5) lp_PDR_120n(5) lp_PDR_160n(5)];
 lp_PDR_SR_7=[lp_PDR(7) lp_PDR_40n(7) lp_PDR_80n(7) lp_PDR_120n(7) lp_PDR_160n(7)];
 
-hp_PDR_SR_1=[hp_PDR(1) hp_PDR_40n(1) hp_PDR_80n(1) hp_PDR_120n(1) hp_PDR_160n(1)];
+hp_PDR_SR_1=[hp_PDR(2) hp_PDR_40n(2) hp_PDR_80n(2) hp_PDR_120n(2) hp_PDR_160n(2)];
 hp_PDR_SR_3=[hp_PDR(3) hp_PDR_40n(3) hp_PDR_80n(3) hp_PDR_120n(3) hp_PDR_160n(3)];
 hp_PDR_SR_5=[hp_PDR(5) hp_PDR_40n(5) hp_PDR_80n(5) hp_PDR_120n(5) hp_PDR_160n(5)];
 hp_PDR_SR_7=[hp_PDR(7) hp_PDR_40n(7) hp_PDR_80n(7) hp_PDR_120n(7) hp_PDR_160n(7)];
@@ -170,11 +230,11 @@ plot(density, hp_PDR_SR_5,'-.xk');
 plot(density, hp_PDR_SR_7,'-.xg');
 ylim([0.05 1.01])
 %legend('20 nodes-.1 sec beacon rate','40 nodes-.1 sec beacon rate','80 nodes-.1 sec beacon rate','160 nodes-.1 sec beacon rate','20 nodes-.05 sec beacon rate','40 nodes-.05 sec beacon rate','80 nodes-.05 sec beacon rate','160 nodes-.05 sec beacon rate');
-legend([num2str(safety_range(1)) ' m range-Risk Scheme-LP Nodes'], [num2str(safety_range(3)) ' m range-Risk Scheme-LP Nodes'], [num2str(safety_range(5)) ' m range-Risk Scheme-LP Nodes'], [num2str(safety_range(7)) ' m range-Risk Scheme-LP Nodes'], ...
-[num2str(safety_range(1)) ' m range-Risk Scheme-HP Nodes'], [num2str(safety_range(3)) ' m range-Risk Scheme-HP Nodes'], [num2str(safety_range(5)) ' m range-Risk Scheme-HP Nodes'], [num2str(safety_range(7)) ' m range-Risk Scheme-HP Nodes']);
+legend([num2str(safety_range(2)) ' m range-Risk Scheme-LP Nodes'], [num2str(safety_range(3)) ' m range-Risk Scheme-LP Nodes'], [num2str(safety_range(5)) ' m range-Risk Scheme-LP Nodes'], [num2str(safety_range(7)) ' m range-Risk Scheme-LP Nodes'], ...
+[num2str(safety_range(2)) ' m range-Risk Scheme-HP Nodes'], [num2str(safety_range(3)) ' m range-Risk Scheme-HP Nodes'], [num2str(safety_range(5)) ' m range-Risk Scheme-HP Nodes'], [num2str(safety_range(7)) ' m range-Risk Scheme-HP Nodes']);
 
 
-figure('rend','painters','pos',[10 10 700 500]);plot(density, hp_PDR_SR_1,'-or');title('Adaptive Rate Packet Delivery Ratio vs Node Density');xlabel('Density(nodes/km)');ylabel('Packet Delivery Ratio');
+figure('rend','painters','pos',[10 10 700 500]);plot(density, hp_PDR_SR_1,'-or');title('High Priority Packet Delivery Ratio vs Node Density');xlabel('Density(nodes/km)');ylabel('Packet Delivery Ratio');
 hold on;
 plot(density, hp_PDR_SR_3,'-ob');
 plot(density, hp_PDR_SR_5,'-ok');
@@ -185,8 +245,15 @@ plot(density, hp_PDR_SR_5_control,'-.xk');
 plot(density, hp_PDR_SR_7_control,'-.xg');
 ylim([0.05 1.01])
 %legend('20 nodes-.1 sec beacon rate','40 nodes-.1 sec beacon rate','80 nodes-.1 sec beacon rate','160 nodes-.1 sec beacon rate','20 nodes-.05 sec beacon rate','40 nodes-.05 sec beacon rate','80 nodes-.05 sec beacon rate','160 nodes-.05 sec beacon rate');
-legend([num2str(safety_range(1)) ' m range-Risk Scheme-HP Nodes'], [num2str(safety_range(3)) ' m range-Risk Scheme-HP Nodes'], [num2str(safety_range(5)) ' m range-Risk Scheme-HP Nodes'], [num2str(safety_range(7)) ' m range-Risk Scheme-HP Nodes'], ...
-[num2str(safety_range(1)) ' m range-Control Scheme-HP Nodes'], [num2str(safety_range(3)) ' m range-Control Scheme-HP Nodes'], [num2str(safety_range(5)) ' m range-Control Scheme-HP Nodes'], [num2str(safety_range(7)) ' m range-Control Scheme-HP Nodes']);
+legend([num2str(safety_range(2)) ' m range-Risk Scheme-HP Nodes'], [num2str(safety_range(3)) ' m range-Risk Scheme-HP Nodes'], [num2str(safety_range(5)) ' m range-Risk Scheme-HP Nodes'], [num2str(safety_range(7)) ' m range-Risk Scheme-HP Nodes'], ...
+[num2str(safety_range(2)) ' m range-Control Scheme-HP Nodes'], [num2str(safety_range(3)) ' m range-Control Scheme-HP Nodes'], [num2str(safety_range(5)) ' m range-Control Scheme-HP Nodes'], [num2str(safety_range(7)) ' m range-Control Scheme-HP Nodes']);
+
+figure('rend','painters','pos',[10 10 700 500]);plot(density, diff_crashes,'-or');title('Difference in Crashes vs Node Density');xlabel('Density(nodes/km)');ylabel('Packet Delivery Ratio');
+
+ylim([0.05 1.01])
+%legend('20 nodes-.1 sec beacon rate','40 nodes-.1 sec beacon rate','80 nodes-.1 sec beacon rate','160 nodes-.1 sec beacon rate','20 nodes-.05 sec beacon rate','40 nodes-.05 sec beacon rate','80 nodes-.05 sec beacon rate','160 nodes-.05 sec beacon rate');
+legend([num2str(safety_range(2)) ' m range-Risk Scheme-HP Nodes'], [num2str(safety_range(3)) ' m range-Risk Scheme-HP Nodes'], [num2str(safety_range(5)) ' m range-Risk Scheme-HP Nodes'], [num2str(safety_range(7)) ' m range-Risk Scheme-HP Nodes'], ...
+[num2str(safety_range(2)) ' m range-Control Scheme-HP Nodes'], [num2str(safety_range(3)) ' m range-Control Scheme-HP Nodes'], [num2str(safety_range(5)) ' m range-Control Scheme-HP Nodes'], [num2str(safety_range(7)) ' m range-Control Scheme-HP Nodes']);
 
 % '40 nodes-Risk Scheme-At Risk Nodes','80 nodes--Risk Scheme-At Risk Nodes',...
 %     '160 nodes--Risk Scheme-At Risk Nodes','20 nodes-Control Scheme-At Risk Nodes','40 nodes-Control Scheme-At Risk Nodes',...

@@ -151,7 +151,7 @@ std::map <uint32_t, PacketInfo *> hp_PacketList;
 std::map <uint32_t, PacketInfo *> hp_missedPacketList;
 double m_lane_thres=2.0;
 double lane_ypos[3] = { 2, 6, 10 };
-const int m_lane_num = 3;
+//const int m_lane_num = 3;
 double highwaylength=2000;
 //int crashes=0;
 static std::atomic<int> crashes(0);
@@ -1608,18 +1608,25 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
 	   ( (std::abs(posm_rx.y-posm_tx.y)<=m_lane_thres) && (posm_tx.x <= posm_rx.x) && (vel_tx.x > vel_rx.x)))
 	{
 		if (temp_ttc<crash_thres) {
-			crashes++;
-			std::cout << "crash occurred" << crashes ;
+      if(Simulator::Now().GetMilliSeconds()>2000){
+        crashes++;
+      }
+
+			std::cout << "crash occurred" << crashes << " ttc: " << temp_ttc<< " priorityrxtx: " << priority_rxtx << " priority: " << priority << std::endl ;
+      mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
+  		mob_tx->SetVelocity(Vector(vel_rx.x,0.0,0.0));
 		}
 		else {
 			manuevers++;
-			std::cout << "corrc occurred" << manuevers ;
+			std::cout << "corrc occurred" << manuevers << " ttc: " << temp_ttc<< " priorityrxtx: " << priority_rxtx << " priority: " << priority << std::endl ;
+      mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
 		}
 		std::cout << " Time: " << Simulator::Now().GetMilliSeconds () << " rxNode: " << rxNodeId << " txNode: " << txNodeId
 				<< " POSRX: x=" << posm_rx.x << ", y=" << posm_rx.y << " POSTX: x=" << posm_tx.x << ", y=" << posm_tx.y << "vel_rx: " << vel_rx.x
 				<< "  vel_tx: " << vel_tx.x << " priority: "<< priority_rxtx << " ttc: " << temp_ttc <<'\n';
+    /*
 		mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
-		mob_tx->SetVelocity(Vector(vel_rx.x,0.0,0.0));
+		mob_tx->SetVelocity(Vector(vel_rx.x,0.0,0.0));*/
 	}
 
 	NS_ASSERT (rxPosition != 0);
@@ -1639,22 +1646,22 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
 		if (rxDistSq > 0.0)
 		{
 			int rangeCount = m_txSafetyRangesSq.size ();
+      //std::cout << "doing incrementing IncRxPktInRangeCount with rxDistSq="<< rxDistSq << std::endl;
 			for (int index = 1; index <= rangeCount; index++)
 			{
 				if (rxDistSq <= m_txSafetyRangesSq[index - 1])
 				{
 					//todo: pass index + base
 					if(priority>=priority_threshold){
+            //std::cout << "incrementing high priority: " << priority << " index:" << index << std::endl;
 						m_waveBsmStats_hp->IncRxPktInRangeCount (index);
-					}/*
-                  if(priority_hp==5){
-                    m_waveBsmStats_hp->IncRxPktInRangeCount (index);
-                  }*/
+					}
 					else{
 						m_waveBsmStats->IncRxPktInRangeCount (index);
 					}
 				}
 			}
+      //std::cout << "done incrementing IncRxPktInRangeCount" << std::endl;
 		}
 	}
 }

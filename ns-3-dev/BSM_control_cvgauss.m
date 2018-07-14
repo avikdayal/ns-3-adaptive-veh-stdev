@@ -82,7 +82,8 @@ fclose(fileID_160n_control);
 % script.
 
 %% Allocate imported array to column variable names
-safety_range=[50 100 150 200 250 300 350 400 450 500];
+%safety_range=[50 100 150 200 250 300 350 400 450 500];
+safety_range=[25 50 100 200 250 300 350 400 450 500];
 
 
 output_control=cell2mat(dataArray_control);
@@ -114,13 +115,13 @@ hp_PDR_160n_control=output_160n_control(11:20);
 % legend('20 nodes-Safe Nodes','40 nodes-Safe Nodes','80 nodes-Safe Nodes','160 nodes-Safe Nodes','20 nodes-At Risk Nodes','40 nodes-At Risk Nodes','80 nodes-At Risk Nodes','160 nodes-At Risk Nodes');
 
 density=[20 40 80 120 160];
-[safety_range(1) safety_range(3) safety_range(5) safety_range(7)];
-lp_PDR_SR_1=[lp_PDR_control(1) lp_PDR_40n_control(1) lp_PDR_80n_control(1) lp_PDR_120n_control(1) lp_PDR_160n_control(1)];
+[safety_range(2) safety_range(3) safety_range(5) safety_range(7)];
+lp_PDR_SR_1=[lp_PDR_control(1) lp_PDR_40n_control(2) lp_PDR_80n_control(1) lp_PDR_120n_control(2) lp_PDR_160n_control(2)];
 lp_PDR_SR_3=[lp_PDR_control(3) lp_PDR_40n_control(3) lp_PDR_80n_control(3) lp_PDR_120n_control(3) lp_PDR_160n_control(3)];
 lp_PDR_SR_5=[lp_PDR_control(5) lp_PDR_40n_control(5) lp_PDR_80n_control(5) lp_PDR_120n_control(5) lp_PDR_160n_control(5)];
 lp_PDR_SR_7=[lp_PDR_control(7) lp_PDR_40n_control(7) lp_PDR_80n_control(7) lp_PDR_120n_control(7) lp_PDR_160n_control(7)];
 
-hp_PDR_SR_1=[hp_PDR_control(1) hp_PDR_40n_control(1) hp_PDR_80n_control(1) hp_PDR_120n_control(1) hp_PDR_160n_control(1)];
+hp_PDR_SR_1=[hp_PDR_control(1) hp_PDR_40n_control(2) hp_PDR_80n_control(2) hp_PDR_120n_control(2) hp_PDR_160n_control(2)];
 hp_PDR_SR_3=[hp_PDR_control(3) hp_PDR_40n_control(3) hp_PDR_80n_control(3) hp_PDR_120n_control(3) hp_PDR_160n_control(3)];
 hp_PDR_SR_5=[hp_PDR_control(5) hp_PDR_40n_control(5) hp_PDR_80n_control(5) hp_PDR_120n_control(5) hp_PDR_160n_control(5)];
 hp_PDR_SR_7=[hp_PDR_control(7) hp_PDR_40n_control(7) hp_PDR_80n_control(7) hp_PDR_120n_control(7) hp_PDR_160n_control(7)];
@@ -138,7 +139,7 @@ plot(density, hp_PDR_SR_7,'-.xg');
 legend([num2str(safety_range(1)) ' m range-Risk Scheme-Safe Nodes'], [num2str(safety_range(3)) ' m range-Risk Scheme-Safe Nodes'], [num2str(safety_range(5)) ' m range-Risk Scheme-Safe Nodes'], [num2str(safety_range(7)) ' m range-Risk Scheme-Safe Nodes'], ...
 [num2str(safety_range(1)) ' m range-Risk Scheme-At Risk Nodes'], [num2str(safety_range(3)) ' m range-Risk Scheme-At Risk Nodes'], [num2str(safety_range(5)) ' m range-Risk Scheme-At Risk Nodes'], [num2str(safety_range(7)) ' m range-Risk Scheme-At Risk Nodes']);
 
-hp_PDR_SR_1_control=[hp_PDR_control(1) hp_PDR_40n_control(1) hp_PDR_80n_control(1) hp_PDR_120n_control(1) hp_PDR_160n_control(1)];
+hp_PDR_SR_1_control=[hp_PDR_control(2) hp_PDR_40n_control(2) hp_PDR_80n_control(2) hp_PDR_120n_control(2) hp_PDR_160n_control(2)];
 hp_PDR_SR_3_control=[hp_PDR_control(3) hp_PDR_40n_control(3) hp_PDR_80n_control(3) hp_PDR_120n_control(3) hp_PDR_160n_control(3)];
 hp_PDR_SR_5_control=[hp_PDR_control(5) hp_PDR_40n_control(5) hp_PDR_80n_control(5) hp_PDR_120n_control(5) hp_PDR_160n_control(5)];
 hp_PDR_SR_7_control=[hp_PDR_control(7) hp_PDR_40n_control(7) hp_PDR_80n_control(7) hp_PDR_120n_control(7) hp_PDR_160n_control(7)];
