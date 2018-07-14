@@ -1671,6 +1671,7 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
 	Vector vel_tx = mob_tx->GetVelocity (); // Get velocity
 	double temp_ttc=GetTTC(txNodeId,rxNodeId);
 	double crash_thres=5.0;
+	static double last_crash=0;
 	if(( (std::abs(posm_rx.y-posm_tx.y)<=m_lane_thres) && (posm_rx.x <= posm_tx.x) && (vel_rx.x > vel_tx.x)) ||
 			( (std::abs(posm_rx.y-posm_tx.y)<=m_lane_thres) && (posm_tx.x <= posm_rx.x) && (vel_tx.x > vel_rx.x)))
 	{
@@ -1680,13 +1681,16 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
 		//if (!NodeInBetween(txNodeId,rxNodeId)) {
 		if (temp_ttc<crash_thres) {
 			crashes++;
-			if(Simulator::Now().GetMilliSeconds() < 2000){
+			double now_time = Simulator::Now().GetMilliSeconds();
+			if( now_time - last_crash < 2000){
 				std::cout << "early crash " << crashes << " ttc: " << temp_ttc<< " priorityrxtx: " << priority_rxtx << " priority: " << priority << std::endl ;
 				mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
 				mob_tx->SetVelocity(Vector(vel_rx.x,0.0,0.0));
 			}
 			else {
+				last_crash = now_time;
 				std::cout << "crash occurred" << crashes << " ttc: " << temp_ttc<< " priorityrxtx: " << priority_rxtx << " priority: " << priority << std::endl ;
+				ReInitNodes();
 			}
 		}
 		else {
