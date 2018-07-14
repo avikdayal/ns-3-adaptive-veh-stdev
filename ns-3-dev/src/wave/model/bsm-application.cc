@@ -1572,6 +1572,42 @@ void BsmApplication::HandlePriorityReceivedBsmPacket (Ptr<Node> txNode,
         }
     }
 }
+
+bool BsmApplication::NodeInBetween (int nid1, int nid2) {
+	NS_LOG_FUNCTION (this);
+	Ptr<Node> node1 = GetNode (nid1);
+	Ptr<Node> node2 = GetNode (nid2);
+
+	Ptr<ConstantVelocityMobilityModel> mob_n1 = node1-> GetObject<ConstantVelocityMobilityModel>();
+	Ptr<ConstantVelocityMobilityModel> mob_n2 = node2-> GetObject<ConstantVelocityMobilityModel>();
+	int  n1_pos = (mob_n1->GetPosition ()).x;
+	int  n2_pos = (mob_n2->GetPosition ()).x;
+	int x1 = n1_pos;
+	int x2 = n2_pos;
+	if (n1_pos > n2_pos){
+		x1 = n2_pos;
+		x2 = n1_pos;
+	}
+    int nodes = m_adhocTxInterfaces->GetN ();
+    for (int i = 0; i < nodes; i++)
+    {
+    	if (i == nid1 || i == nid2)
+    	{
+    		continue;
+    	}
+    	Ptr<Node> cnode = GetNode (i);
+    	Ptr<ConstantVelocityMobilityModel> mob_c = cnode-> GetObject<ConstantVelocityMobilityModel>();
+    	int c_pos = (mob_c->GetPosition ()).x;
+    	if (x1 <= c_pos && c_pos <= x2){
+    		std::cout << "nodes in between n1=" << nid1 << " c=" << i << " n2=" << nid2 << std::endl;
+    		return true;
+    	}
+    }
+	return false;
+}
+
+
+
 void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
 		Ptr<Node> rxNode, int txNodeId, int rxNodeId, double prio)
 {
@@ -1605,28 +1641,29 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
 	double temp_ttc=GetTTC(txNodeId,rxNodeId);
 	double crash_thres=5.0;
 	if(( (std::abs(posm_rx.y-posm_tx.y)<=m_lane_thres) && (posm_rx.x <= posm_tx.x) && (vel_rx.x > vel_tx.x)) ||
-	   ( (std::abs(posm_rx.y-posm_tx.y)<=m_lane_thres) && (posm_tx.x <= posm_rx.x) && (vel_tx.x > vel_rx.x)))
+			( (std::abs(posm_rx.y-posm_tx.y)<=m_lane_thres) && (posm_tx.x <= posm_rx.x) && (vel_tx.x > vel_rx.x)))
 	{
-		if (temp_ttc<crash_thres) {
-      if(Simulator::Now().GetMilliSeconds()>2000){
-        crashes++;
-      }
+		if (!NodeInBetween(txNodeId,rxNodeId)) {
+			if (temp_ttc<crash_thres) {
+				if(Simulator::Now().GetMilliSeconds()>2000){
+					crashes++;
+				}
 
-			std::cout << "crash occurred" << crashes << " ttc: " << temp_ttc<< " priorityrxtx: " << priority_rxtx << " priority: " << priority << std::endl ;
-      mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
-  		mob_tx->SetVelocity(Vector(vel_rx.x,0.0,0.0));
-		}
-		else {
-			manuevers++;
-			std::cout << "corrc occurred" << manuevers << " ttc: " << temp_ttc<< " priorityrxtx: " << priority_rxtx << " priority: " << priority << std::endl ;
-      mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
+				std::cout << "crash occurred" << crashes << " ttc: " << temp_ttc<< " priorityrxtx: " << priority_rxtx << " priority: " << priority << std::endl ;
+				mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
+				mob_tx->SetVelocity(Vector(vel_rx.x,0.0,0.0));
+			}
+			else {
+				manuevers++;
+				std::cout << "corrc occurred" << manuevers << " ttc: " << temp_ttc<< " priorityrxtx: " << priority_rxtx << " priority: " << priority << std::endl ;
+				mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
+			}
 		}
 		std::cout << " Time: " << Simulator::Now().GetMilliSeconds () << " rxNode: " << rxNodeId << " txNode: " << txNodeId
 				<< " POSRX: x=" << posm_rx.x << ", y=" << posm_rx.y << " POSTX: x=" << posm_tx.x << ", y=" << posm_tx.y << "vel_rx: " << vel_rx.x
 				<< "  vel_tx: " << vel_tx.x << " priority: "<< priority_rxtx << " ttc: " << temp_ttc <<'\n';
-    /*
-		mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
-		mob_tx->SetVelocity(Vector(vel_rx.x,0.0,0.0));*/
+
+
 	}
 
 	NS_ASSERT (rxPosition != 0);
@@ -1646,14 +1683,14 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
 		if (rxDistSq > 0.0)
 		{
 			int rangeCount = m_txSafetyRangesSq.size ();
-      //std::cout << "doing incrementing IncRxPktInRangeCount with rxDistSq="<< rxDistSq << std::endl;
+			//std::cout << "doing incrementing IncRxPktInRangeCount with rxDistSq="<< rxDistSq << std::endl;
 			for (int index = 1; index <= rangeCount; index++)
 			{
 				if (rxDistSq <= m_txSafetyRangesSq[index - 1])
 				{
 					//todo: pass index + base
 					if(priority>=priority_threshold){
-            //std::cout << "incrementing high priority: " << priority << " index:" << index << std::endl;
+						//std::cout << "incrementing high priority: " << priority << " index:" << index << std::endl;
 						m_waveBsmStats_hp->IncRxPktInRangeCount (index);
 					}
 					else{
@@ -1661,7 +1698,7 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
 					}
 				}
 			}
-      //std::cout << "done incrementing IncRxPktInRangeCount" << std::endl;
+			//std::cout << "done incrementing IncRxPktInRangeCount" << std::endl;
 		}
 	}
 }
