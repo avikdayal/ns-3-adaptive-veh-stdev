@@ -31,6 +31,11 @@
 #include <atomic>
 NS_LOG_COMPONENT_DEFINE ("BsmApplication");
 
+// chnahe the followig values for experiment
+#define TTC_THRESH 7.0
+#define TTC_THRESH_UPPER 10.0
+#define CRASH_THRESHOLD 2
+//#define ADAPTIVE_PRIO
 
 namespace ns3 {
 
@@ -554,7 +559,7 @@ BsmApplication::GeneratePriorityWaveTraffic (Ptr<Socket> socket, uint32_t pktSiz
 
 	int min_interval=100;
 	int loop_min_interval = min_interval;
-//#define ADAPTIVE_PRIO
+
 #ifdef ADAPTIVE_PRIO
 	int max_interval=1000;
 	int max_priority=5;
@@ -759,7 +764,7 @@ int BsmApplication::GetPriorityLevel(int sendingNodeId)
               double ttc;//time to collision
               double ttc_thres;
               //double ttc_thres_upper;
-              ttc_thres=6.0;
+              ttc_thres=TTC_THRESH;
               //ttc_thres_upper=8.0;
               // confirm that the receiving node
               // has also started moving in the scenario
@@ -828,7 +833,7 @@ int BsmApplication::GetPriorityLevel(int sendingNodeId, int rxNodeId)
               double rel_vel=(std::abs(node_speed-node_speed_rx));
               double ttc;//time to collision
               double ttc_thres;
-              ttc_thres=6.0;
+              ttc_thres=TTC_THRESH;
               // confirm that the receiving node
               // has also started moving in the scenario
               // if it has not started moving, then
@@ -896,8 +901,8 @@ double BsmApplication::GetAdaptivePriorityLevel(int sendingNodeId)
 		double ttc;//time to collision
 		double ttc_thres;
 		double ttc_thres_upper;
-		ttc_thres=6.0;
-		ttc_thres_upper=15.0;
+		ttc_thres=TTC_THRESH;
+		ttc_thres_upper=TTC_THRESH_UPPER;
 		// confirm that the receiving node
 		// has also started moving in the scenario
 		// if it has not started moving, then
@@ -963,8 +968,8 @@ double BsmApplication::GetAdaptivePriorityLevel(int sendingNodeId, int rxNodeId)
       double ttc;//time to collision
       double ttc_thres;
       double ttc_thres_upper;
-      ttc_thres=6.0;
-      ttc_thres_upper=15.0;
+      ttc_thres=TTC_THRESH;
+      ttc_thres_upper=TTC_THRESH_UPPER;
       // confirm that the receiving node
       // has also started moving in the scenario
       // if it has not started moving, then
@@ -1375,7 +1380,7 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
 	Vector posm_tx = mob_tx->GetPosition (); // Get position
 	Vector vel_tx = mob_tx->GetVelocity (); // Get velocity
 	double temp_ttc=GetTTC(txNodeId,rxNodeId);
-	double crash_thres=5.0;
+	double crash_thres=CRASH_THRESHOLD;
 	static double last_crash=0;
 	std::cout << "Time: " << Simulator::Now().GetMilliSeconds () << " txNode: " << txNodeId  << "(x=" << posm_tx.x << " y=" << posm_tx.y
 			<< "  vel=" << vel_tx.x << ") "
@@ -1390,14 +1395,14 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
 			crashes++;
 			double now_time = Simulator::Now().GetMilliSeconds();
 			if( now_time - last_crash < 2000){
-				std::cout << "early crash " << crashes  << " txNode: " << txNodeId  << " rxNode: " << rxNodeId << " MsgId:" << MsgId << " ttc: " << temp_ttc<< " priorityrxtx: "
+				std::cout << "Time: " << Simulator::Now().GetMilliSeconds ()  << "early crash " << crashes  << " txNode: " << txNodeId  << " rxNode: " << rxNodeId << " MsgId:" << MsgId << " ttc: " << temp_ttc<< " priorityrxtx: "
 						  << priority_rxtx << " priority: " << priority  << " logx_recv" << std::endl ;
 				mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
 				mob_tx->SetVelocity(Vector(vel_rx.x,0.0,0.0));
 			}
 			else {
 				last_crash = now_time;
-				std::cout << "crash occurred" << crashes  << " txNode: " << txNodeId  << " rxNode: " << rxNodeId << " MsgId:" << MsgId << " ttc: " << temp_ttc<< " priorityrxtx: "
+				std::cout << "Time: " << Simulator::Now().GetMilliSeconds () << "crash occurred" << crashes  << " txNode: " << txNodeId  << " rxNode: " << rxNodeId << " MsgId:" << MsgId << " ttc: " << temp_ttc<< " priorityrxtx: "
 						 << priority_rxtx << " priority: " << priority << " logx_recv" << std::endl ;
 				ReInitNodes();
 			}
@@ -1405,7 +1410,7 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
 		else {
 			if (prio >=5 && !NodeInBetween(txNodeId,rxNodeId)) {
 				manuevers++;
-				std::cout << "corrc occurred" << manuevers  << " txNode: " << txNodeId  << " rxNode: " << rxNodeId << " MsgId:" << MsgId << " ttc: " << temp_ttc<< " priorityrxtx: "
+				std::cout<< "Time: " << Simulator::Now().GetMilliSeconds ()  << "corrc occurred" << manuevers  << " txNode: " << txNodeId  << " rxNode: " << rxNodeId << " MsgId:" << MsgId << " ttc: " << temp_ttc<< " priorityrxtx: "
 						<< priority_rxtx << " priority: " << priority << " logx_recv" << std::endl ;
 				if ( (posm_rx.x <= posm_tx.x) && (vel_rx.x > vel_tx.x))
 					mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
@@ -1413,7 +1418,7 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
 					mob_tx->SetVelocity(Vector(vel_rx.x,0.0,0.0));
 			}
 			else {
-				std::cout << "corrc skipped" << manuevers  << " txNode: " << txNodeId  << " rxNode: " << rxNodeId << " MsgId:" << MsgId << " ttc: " << temp_ttc<< " priorityrxtx: "
+				std::cout << "Time: " << Simulator::Now().GetMilliSeconds () << "corrc skipped" << manuevers  << " txNode: " << txNodeId  << " rxNode: " << rxNodeId << " MsgId:" << MsgId << " ttc: " << temp_ttc<< " priorityrxtx: "
 						<< priority_rxtx << " priority: " << priority << " logx_recv" << std::endl ;
 			}
 		}
