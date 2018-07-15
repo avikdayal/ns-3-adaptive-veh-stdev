@@ -32,10 +32,12 @@
 NS_LOG_COMPONENT_DEFINE ("BsmApplication");
 
 // chnahe the followig values for experiment
+#define ADAPTIVE_PRIO
+
 #define TTC_THRESH 7.0
 #define TTC_THRESH_UPPER 10.0
 #define CRASH_THRESHOLD 2
-//#define ADAPTIVE_PRIO
+#define PRIO_MANUEVER_THRESHOLD 4.5
 
 namespace ns3 {
 
@@ -1382,35 +1384,35 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
 	double temp_ttc=GetTTC(txNodeId,rxNodeId);
 	double crash_thres=CRASH_THRESHOLD;
 	static double last_crash=0;
-	std::cout << "Time: " << Simulator::Now().GetMilliSeconds () << " txNode: " << txNodeId  << "(x=" << posm_tx.x << " y=" << posm_tx.y
-			<< "  vel=" << vel_tx.x << ") "
-			<< " rxNode: " << rxNodeId
-			<< "(x=" << posm_rx.x << " y=" << posm_rx.y  << " vel=" << vel_rx.x << ") "
-			<< " priority: "<< priority_rxtx << " ttc: " << temp_ttc << " MsgId:" << MsgId << " logx_recv" << std::endl;
 	if(( (std::abs(posm_rx.y-posm_tx.y)<=m_lane_thres) && (posm_rx.x <= posm_tx.x) && (vel_rx.x > vel_tx.x)) ||
 			( (std::abs(posm_rx.y-posm_tx.y)<=m_lane_thres) && (posm_tx.x <= posm_rx.x) && (vel_tx.x > vel_rx.x)))
 	{
+		std::cout << "Time: " << Simulator::Now().GetMilliSeconds () << " txNode: " << txNodeId  << "(x=" << posm_tx.x << " y=" << posm_tx.y
+				<< "  vel=" << vel_tx.x << ") "
+				<< " rxNode: " << rxNodeId
+				<< "(x=" << posm_rx.x << " y=" << posm_rx.y  << " vel=" << vel_rx.x << ") "
+				<< " priority: "<< priority_rxtx << " ttc: " << temp_ttc << " MsgId: " << MsgId << " logx_recv" << std::endl;
 		//if (!NodeInBetween(txNodeId,rxNodeId)) {
 		if (temp_ttc<crash_thres) {
 			crashes++;
 			double now_time = Simulator::Now().GetMilliSeconds();
 			if( now_time - last_crash < 2000){
-				std::cout << "Time: " << Simulator::Now().GetMilliSeconds ()  << "early crash " << crashes  << " txNode: " << txNodeId  << " rxNode: " << rxNodeId << " MsgId:" << MsgId << " ttc: " << temp_ttc<< " priorityrxtx: "
+				std::cout << "Time: " << Simulator::Now().GetMilliSeconds ()  << " early crash " << crashes  << " txNode: " << txNodeId  << " rxNode: " << rxNodeId << " MsgId: " << MsgId << " ttc: " << temp_ttc<< " priorityrxtx: "
 						  << priority_rxtx << " priority: " << priority  << " logx_recv" << std::endl ;
 				mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
 				mob_tx->SetVelocity(Vector(vel_rx.x,0.0,0.0));
 			}
 			else {
 				last_crash = now_time;
-				std::cout << "Time: " << Simulator::Now().GetMilliSeconds () << "crash occurred" << crashes  << " txNode: " << txNodeId  << " rxNode: " << rxNodeId << " MsgId:" << MsgId << " ttc: " << temp_ttc<< " priorityrxtx: "
+				std::cout << "Time: " << Simulator::Now().GetMilliSeconds () << " crash occurred" << crashes  << " txNode: " << txNodeId  << " rxNode: " << rxNodeId << " MsgId: " << MsgId << " ttc: " << temp_ttc<< " priorityrxtx: "
 						 << priority_rxtx << " priority: " << priority << " logx_recv" << std::endl ;
 				ReInitNodes();
 			}
 		}
 		else {
-			if (prio >=5 && !NodeInBetween(txNodeId,rxNodeId)) {
+			if (priority_rxtx >= PRIO_MANUEVER_THRESHOLD ) { //&& !NodeInBetween(txNodeId,rxNodeId)) {
 				manuevers++;
-				std::cout<< "Time: " << Simulator::Now().GetMilliSeconds ()  << "corrc occurred" << manuevers  << " txNode: " << txNodeId  << " rxNode: " << rxNodeId << " MsgId:" << MsgId << " ttc: " << temp_ttc<< " priorityrxtx: "
+				std::cout<< "Time: " << Simulator::Now().GetMilliSeconds ()  << " corrc occurred" << manuevers  << " txNode: " << txNodeId  << " rxNode: " << rxNodeId << " MsgId: " << MsgId << " ttc: " << temp_ttc<< " priorityrxtx: "
 						<< priority_rxtx << " priority: " << priority << " logx_recv" << std::endl ;
 				if ( (posm_rx.x <= posm_tx.x) && (vel_rx.x > vel_tx.x))
 					mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
@@ -1418,7 +1420,7 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
 					mob_tx->SetVelocity(Vector(vel_rx.x,0.0,0.0));
 			}
 			else {
-				std::cout << "Time: " << Simulator::Now().GetMilliSeconds () << "corrc skipped" << manuevers  << " txNode: " << txNodeId  << " rxNode: " << rxNodeId << " MsgId:" << MsgId << " ttc: " << temp_ttc<< " priorityrxtx: "
+				std::cout << "Time: " << Simulator::Now().GetMilliSeconds () << " corrc skipped" << manuevers  << " txNode: " << txNodeId  << " rxNode: " << rxNodeId << " MsgId: " << MsgId << " ttc: " << temp_ttc<< " priorityrxtx: "
 						<< priority_rxtx << " priority: " << priority << " logx_recv" << std::endl ;
 			}
 		}
