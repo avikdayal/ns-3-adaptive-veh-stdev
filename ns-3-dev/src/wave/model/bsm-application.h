@@ -27,6 +27,11 @@
 #include "ns3/random-variable-stream.h"
 #include "ns3/internet-stack-helper.h"
 
+#define ROAD_LENGTH_NUM  2000.0
+#define ROAD_LENGTH_STR "2000.0"
+
+//#define ROAD_LENGTH_NUM  300.0
+//#define ROAD_LENGTH_STR "300.0"
 
 namespace ns3 {
 /**
@@ -155,7 +160,7 @@ private:
                                 Ptr<Node> rxNode, int txNodeId,int rxNodeId, double prio);
   bool NodeInBetween (int nid1, int nid2);
   void HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
-                                Ptr<Node> rxNode, int txNodeId,int rxNodeId, double prio);
+                                Ptr<Node> rxNode, int txNodeId,int rxNodeId, double prio, int MsgId);
   void ReInitNodes();
   int GetPriorityLevel(int sendingNodeId);
   int GetPriorityLevel(int sendingNodeId, int rxNodeId);

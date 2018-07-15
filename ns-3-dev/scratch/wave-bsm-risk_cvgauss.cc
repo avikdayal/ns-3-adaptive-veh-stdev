@@ -1989,8 +1989,8 @@ VanetRoutingExperiment::CheckThroughput ()
       NS_ASSERT(mob);
       Vector posm = mob->GetPosition (); // Get position
       Vector vel = mob->GetVelocity (); // Get velocity
-      if(posm.x>2000){
-          mob->SetPosition(Vector(posm.x-2000.00, posm.y, posm.z));
+      if(posm.x > ROAD_LENGTH_NUM){
+          mob->SetPosition(Vector(posm.x - ROAD_LENGTH_NUM, posm.y, posm.z));
           //mob->SetVelocity(velocities[i]);
           mob->SetVelocity(vel);
           //m_streamIndex += mobilityAdhoc.AssignStreams (m_adhocTxNodes, m_streamIndex);
@@ -2311,7 +2311,7 @@ VanetRoutingExperiment::SetupAdhocMobilityNodes ()
       pos.SetTypeId ("ns3::RandomBoxPositionAllocator");
       //pos.Set ("X", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=1500.0]"));
       //pos.Set ("Y", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=300.0]"));
-      pos.Set ("X", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=2000.0]")); //Distance to 1 km
+      pos.Set ("X", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=" ROAD_LENGTH_STR "]")); //Distance to 1 km
       pos.Set ("Y", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=12.0]"));
       //pos.Set ("Y", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=100.0]"));
       // we need antenna height uniform [1.0 .. 2.0] for loss model
