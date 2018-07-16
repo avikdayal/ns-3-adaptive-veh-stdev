@@ -32,11 +32,11 @@
 NS_LOG_COMPONENT_DEFINE ("BsmApplication");
 
 // chnahe the followig values for experiment
-//#define ADAPTIVE_PRIO
+#define ADAPTIVE_PRIO
 
 #define TTC_THRESH 5.0
 #define TTC_THRESH_UPPER 15.0
-#define CRASH_THRESHOLD 2
+#define CRASH_THRESHOLD 4
 #define PRIO_MANUEVER_THRESHOLD 5.0
 
 namespace ns3 {
@@ -877,6 +877,7 @@ int BsmApplication::GetPriorityLevel(int sendingNodeId, int rxNodeId)
     return priority;
 
 }
+
 double BsmApplication::GetAdaptivePriorityLevel(int sendingNodeId)
 {
 	int txNodeId = sendingNodeId;
@@ -926,9 +927,16 @@ double BsmApplication::GetAdaptivePriorityLevel(int sendingNodeId)
 		NS_ASSERT(mob_rx);
 		Vector posm_rx = mob_rx->GetPosition (); // Get position
 		Vector posm_tx = mob_tx->GetPosition (); // Get position
-
+    //Vector vel_rx = mob_rx->GetVelocity (); // Get position
+    Vector vel_tx = mob_tx->GetVelocity (); // Get position
 		if (distSq > 0.0)
 		{
+      if(std::abs(posm_rx.y-posm_tx.y)<m_lane_thres){
+        if(std::abs(posm_rx.x-posm_tx.x)/vel_tx.x< 1 && ttc>=1000){
+          priority=5;
+          return priority;
+        }
+      }
 			if ((ttc < ttc_thres) && (std::abs(posm_rx.y-posm_tx.y)<m_lane_thres)){
 				priority = 5;
 				return priority;
@@ -941,6 +949,8 @@ double BsmApplication::GetAdaptivePriorityLevel(int sendingNodeId)
 			}
 		}
 	}
+
+
 	return priority;
 }
 
@@ -990,15 +1000,20 @@ double BsmApplication::GetAdaptivePriorityLevel(int sendingNodeId, int rxNodeId)
         NS_ASSERT(mob_rx);
         Vector posm_rx = mob_rx->GetPosition (); // Get position
         Vector posm_tx = mob_tx->GetPosition (); // Get position
+        Vector vel_tx = mob_tx->GetVelocity (); // Get position
         if(ttc_2!=ttc){
           //std::cout << "PROBLEM in AGPL2 " << " ttc_original: "<< ttc_2<< " ttc_new: "<< ttc << " distsq_new: "<< distSq << " relvel_new: "<< rel_vel << " txnodeID: "<< txNodeId <<" rxnodeID: "<< rxNodeId << " rxnode_pos: "<< posm_rx << " txnode_pos: "<< posm_tx << " txnode_vel: "<< vel << " rxnode_vel:"<< vel_rx << std::endl;
         }
         //ttc=(distSq/rel_vel);
         if (distSq > 0.0)
         {
+          if(std::abs(posm_rx.y-posm_tx.y)<m_lane_thres){
+            if(std::abs(posm_rx.x-posm_tx.x)/vel_tx.x< 1 && ttc>=1000){
+              priority=5;
+              return priority;
+            }
+          }
           if ((ttc < ttc_thres) && (std::abs(posm_rx.y-posm_tx.y)<m_lane_thres)){
-            //std::cout << "ttcHP : " << ttc << std::endl;
-            //std::cout << "priority 5 ttc: " << ttc << std::endl;
             priority = 5;
             return priority;
           }
@@ -1016,7 +1031,6 @@ double BsmApplication::GetAdaptivePriorityLevel(int sendingNodeId, int rxNodeId)
   }
   return priority;
 }
-
 
 double BsmApplication::GetTTC(int sendingNodeId, int rxNodeId)
 {
