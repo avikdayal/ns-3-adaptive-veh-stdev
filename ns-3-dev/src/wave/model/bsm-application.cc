@@ -32,12 +32,12 @@
 NS_LOG_COMPONENT_DEFINE ("BsmApplication");
 
 // chnahe the followig values for experiment
-#define ADAPTIVE_PRIO
+//#define ADAPTIVE_PRIO
 
-#define TTC_THRESH 7.0
-#define TTC_THRESH_UPPER 10.0
+#define TTC_THRESH 5.0
+#define TTC_THRESH_UPPER 15.0
 #define CRASH_THRESHOLD 2
-#define PRIO_MANUEVER_THRESHOLD 4.5
+#define PRIO_MANUEVER_THRESHOLD 5.0
 
 namespace ns3 {
 
@@ -1317,6 +1317,29 @@ bool BsmApplication::NodeInBetween (int nid1, int nid2) {
 	return false;
 }
 
+void BsmApplication::PrintCrashStatus(int crash_num) {
+  std::string CSVfileName ="CrashStatus.csv";
+  std::ofstream out2;
+  if (crash_num==0) {
+    out2.open(CSVfileName.c_str());
+  }
+  else {
+    out2.open(CSVfileName.c_str(), std::ios::app);
+  }
+  out2 << "crash_num,time,node,pos_x,pos_y,pos_z,vel_x,vel_y,vel_z" << std::endl;
+  for(unsigned int i=0;i< m_adhocTxInterfaces->GetN (); i++){
+		Ptr<ConstantVelocityMobilityModel> mob = GetNode(i)-> GetObject<ConstantVelocityMobilityModel>();
+		Vector posm = mob->GetPosition (); // Get position
+    posm = mob->GetPosition (); // Get position
+    Vector vel = mob->GetVelocity (); // Get velocity
+    out2 << crash_num << ","<< Simulator::Now () << "," << i << "," << posm.x << "," << posm.y << "," << posm.z
+                   << "," << vel.x << "," << vel.y  << "," << vel.z << std::endl;
+	}
+  out2.close();
+}
+
+
+
 
 void BsmApplication::ReInitNodes () {
 	Ptr<UniformRandomVariable> var2 = CreateObject<UniformRandomVariable> ();
@@ -1325,27 +1348,29 @@ void BsmApplication::ReInitNodes () {
 	int64_t stream2 = 2;
 	var->SetStream (stream);
 	var2->SetStream (stream2);
+  static int num_lanes=3;
+  int lane_pos[num_lanes] = {0};
+  int curr_lane =0;
+  double lane_y[]  = {2.0, 6.0, 8.0};
+  double veh_spacing=ROAD_LENGTH_NUM*num_lanes/m_adhocTxInterfaces->GetN();
+
 	for(unsigned int i=0;i< m_adhocTxInterfaces->GetN (); i++){
 		Ptr<ConstantVelocityMobilityModel> mob = GetNode(i)-> GetObject<ConstantVelocityMobilityModel>();
 		Vector posm = mob->GetPosition (); // Get position
-		double temp=var2->GetValue (0.0,3.0);
-		double x=var2->GetValue (0.0,ROAD_LENGTH_NUM);
-		if(temp>=0.0 && temp<1.0){
-			mob->SetPosition(Vector(x, 2.0, posm.z));
-		}
-		else if(temp>=1.0 && temp<2.0){
-			mob->SetPosition(Vector(x, 6.0, posm.z));
-		}
-		else if(temp>=2.0 && temp<3.0){
-			mob->SetPosition(Vector(x, 10.0, posm.z));
-		}
-		else{
-			std::cout << "error in allocating y position: " << temp << '\n';
-		}
-
-		Vector node_vel=Vector(30+std::sqrt(16)*var->GetValue (), 0.0, 0.0);
-		//Vector node_vel=Vector(30+0.5*var->GetValue (), 0.0, 0.0);
-		mob->SetVelocity(node_vel);
+    double x = lane_pos[curr_lane];
+    mob->SetPosition(Vector(x, lane_y[curr_lane], posm.y));
+    Vector node_vel=Vector(30+std::sqrt(5)*var->GetValue (), 0.0, 0.0);
+    //Vector node_vel=Vector(30+0.5*var->GetValue (), 0.0, 0.0);
+    mob->SetVelocity(node_vel);
+    posm = mob->GetPosition (); // Get position
+    Vector vel = mob->GetVelocity (); // Get velocity
+    std::cout << Simulator::Now () << " Reinit Node: " << i << " POS: x=" << posm.x << ", y=" << posm.y << ", z=" << posm.z << "; VEL:" << vel.x << ", y=" << vel.y  << ", z=" << vel.z << std::endl;
+    lane_pos[curr_lane] += veh_spacing;
+    if (lane_pos[curr_lane] > ROAD_LENGTH_NUM)
+      lane_pos[curr_lane]=0;
+    curr_lane++;
+    if (curr_lane > 2)
+      curr_lane =0;
 	}
 }
 
@@ -1394,8 +1419,9 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
 				<< " priority: "<< priority_rxtx << " ttc: " << temp_ttc << " MsgId: " << MsgId << " logx_recv" << std::endl;
 		//if (!NodeInBetween(txNodeId,rxNodeId)) {
 		if (temp_ttc<crash_thres) {
-			crashes++;
-			double now_time = Simulator::Now().GetMilliSeconds();
+      PrintCrashStatus(crashes);
+      crashes++;
+      double now_time = Simulator::Now().GetMilliSeconds();
 			if( now_time - last_crash < 2000){
 				std::cout << "Time: " << Simulator::Now().GetMilliSeconds ()  << " early crash " << crashes  << " txNode: " << txNodeId  << " rxNode: " << rxNodeId << " MsgId: " << MsgId << " ttc: " << temp_ttc<< " priorityrxtx: "
 						  << priority_rxtx << " priority: " << priority  << " logx_recv" << std::endl ;
@@ -1404,10 +1430,11 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
 			}
 			else {
 				last_crash = now_time;
-				std::cout << "Time: " << Simulator::Now().GetMilliSeconds () << " crash occurred" << crashes  << " txNode: " << txNodeId  << " rxNode: " << rxNodeId << " MsgId: " << MsgId << " ttc: " << temp_ttc<< " priorityrxtx: "
+				std::cout << "Time: " << Simulator::Now().GetMilliSeconds () << " crash occurred " << crashes  << " txNode: " << txNodeId  << " rxNode: " << rxNodeId << " MsgId: " << MsgId << " ttc: " << temp_ttc<< " priorityrxtx: "
 						 << priority_rxtx << " priority: " << priority << " logx_recv" << std::endl ;
 				ReInitNodes();
 			}
+
 		}
 		else {
 			if (priority_rxtx >= PRIO_MANUEVER_THRESHOLD ) { //&& !NodeInBetween(txNodeId,rxNodeId)) {

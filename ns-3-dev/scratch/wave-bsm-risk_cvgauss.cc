@@ -1751,7 +1751,7 @@ VanetRoutingExperiment::ProcessOutputs ()
       std::cout << "inside of process outputs" << '\n';
       NS_LOG_UNCOND ("BSM_PDR1=" << bsm_pdr1 << " BSM_PDR2=" << bsm_pdr2 << " BSM_PDR3=" << bsm_pdr3 << " BSM_PDR4=" << bsm_pdr4 << " BSM_PDR5=" << bsm_pdr5 << " BSM_PDR6=" << bsm_pdr6 << " BSM_PDR7=" << bsm_pdr7 << " BSM_PDR8=" << bsm_pdr8 << " BSM_PDR9=" << bsm_pdr9 << " BSM_PDR10=" << bsm_pdr10 << " Goodput=" << averageRoutingGoodputKbps << "Kbps MAC/PHY-oh=" << mac_phy_oh);
       NS_LOG_UNCOND ("High Priority BSM_PDR1_hp=" << bsm_pdr1_hp << " BSM_PDR2=" << bsm_pdr2_hp << " BSM_PDR3=" << bsm_pdr3_hp << " BSM_PDR4=" << bsm_pdr4_hp << " BSM_PDR5=" << bsm_pdr5_hp << " BSM_PDR6=" << bsm_pdr6_hp << " BSM_PDR7=" << bsm_pdr7_hp << " BSM_PDR8=" << bsm_pdr8_hp << " BSM_PDR9=" << bsm_pdr9_hp << " BSM_PDR10=" << bsm_pdr10_hp << " Goodput=" << averageRoutingGoodputKbps << "Kbps MAC/PHY-oh=" << mac_phy_oh);
-      
+
       NS_LOG_UNCOND ("Low Priority count=" << bsm_pdr1_count << " BSM_PDR2=" << bsm_pdr2_count << " BSM_PDR3=" << bsm_pdr3_count << " BSM_PDR4=" << bsm_pdr4_count << " BSM_PDR5=" << bsm_pdr5_count << " BSM_PDR6=" << bsm_pdr6_count << " BSM_PDR7=" << bsm_pdr7_count << " BSM_PDR8=" << bsm_pdr8_count << " BSM_PDR9=" << bsm_pdr9_count << " BSM_PDR10=" << bsm_pdr10_count << " Goodput=" << averageRoutingGoodputKbps << "Kbps MAC/PHY-oh=" << mac_phy_oh << " Receivedpackets=" << m_waveBsmHelper.GetWaveBsmStats ()->GetRxPktCount () << " Totalsentpackets=" << m_waveBsmHelper.GetWaveBsmStats ()->GetTxPktCount ());
 
       NS_LOG_UNCOND ("High Priority count=" << bsm_pdr1_hp_count << " BSM_PDR2=" << bsm_pdr2_hp_count << " BSM_PDR3=" << bsm_pdr3_hp_count << " BSM_PDR4=" << bsm_pdr4_hp_count << " BSM_PDR5=" << bsm_pdr5_hp_count << " BSM_PDR6=" << bsm_pdr6_hp_count << " BSM_PDR7=" << bsm_pdr7_hp_count << " BSM_PDR8=" << bsm_pdr8_hp_count << " BSM_PDR9=" << bsm_pdr9_hp_count << " BSM_PDR10=" << bsm_pdr10_hp_count << " Goodput=" << averageRoutingGoodputKbps << "Kbps MAC/PHY-oh=" << mac_phy_oh<< " Receivedpackets=" << m_waveBsmHelper.GetWaveBsmStats_hp ()->GetRxPktCount () << " Totalsentpackets=" << m_waveBsmHelper.GetWaveBsmStats_hp ()->GetTxPktCount ());
@@ -2338,36 +2338,31 @@ VanetRoutingExperiment::SetupAdhocMobilityNodes ()
       int64_t stream2 = 2;
       var->SetStream (stream);
       var2->SetStream (stream2);
+      static int num_lanes=3;
+      int lane_pos[num_lanes] = {0};
+      int curr_lane =0;
+      double lane_y[]  = {2.0, 6.0, 8.0};
+
+      double veh_spacing=ROAD_LENGTH_NUM*num_lanes/m_adhocTxNodes.GetN();
       for(unsigned int i=0;i<m_adhocTxNodes.GetN(); i++){
         Ptr<ConstantVelocityMobilityModel> mob = m_adhocTxNodes.Get(i)-> GetObject<ConstantVelocityMobilityModel>();
-              //mob->SetVelocity(Vector(var->GetValue (0.0,20.0), var->GetValue (-2.0,2.0), 0.0));
-              //mob->SetVelocity(Vector(30+std::sqrt(10)*var->GetValue (), 0.0, 0.0));
-              //Vector node_vel=Vector(var->GetValue (0.0,35.0), 0.0, 0.0);
         Vector posm = mob->GetPosition (); // Get position
-        double temp=var2->GetValue (0.0,3.0);
-        if(temp>=0.0 && temp<1.0){
-          mob->SetPosition(Vector(posm.x, 2.0, posm.z));
-        }
-        else if(temp>=1.0 && temp<2.0){
-          mob->SetPosition(Vector(posm.x, 6.0, posm.z));
-        }
-        else if(temp>=2.0 && temp<3.0){
-          mob->SetPosition(Vector(posm.x, 10.0, posm.z));
-        }
-        else{
-          std::cout << "error in allocating y position: " << temp << '\n';
-        }
-
-        Vector node_vel=Vector(30+std::sqrt(16)*var->GetValue (), 0.0, 0.0);
+        double x = lane_pos[curr_lane];
+        mob->SetPosition(Vector(x, lane_y[curr_lane], posm.y));
+        Vector node_vel=Vector(30+std::sqrt(5)*var->GetValue (), 0.0, 0.0);
         //Vector node_vel=Vector(30+0.5*var->GetValue (), 0.0, 0.0);
         mob->SetVelocity(node_vel);
         velocities[i]=node_vel;
         posm = mob->GetPosition (); // Get position
         Vector vel = mob->GetVelocity (); // Get velocity
-        std::cout << Simulator::Now () << " Node: " << i << " POS: x=" << posm.x << ", y=" << posm.y << ", z=" << posm.z << "; VEL:" << vel.x << ", y=" << vel.y  << ", z=" << vel.z << std::endl;
+        std::cout << Simulator::Now () << " Setup Node: " << i << " POS: x=" << posm.x << ", y=" << posm.y << ", z=" << posm.z << "; VEL:" << vel.x << ", y=" << vel.y  << ", z=" << vel.z << std::endl;
+        lane_pos[curr_lane] += veh_spacing;
+        if (lane_pos[curr_lane] > ROAD_LENGTH_NUM)
+          lane_pos[curr_lane]=0;
+        curr_lane++;
+        if (curr_lane > 2)
+          curr_lane =0;
       }
-
-
 
       m_streamIndex += mobilityAdhoc.AssignStreams (m_adhocTxNodes, m_streamIndex);
 

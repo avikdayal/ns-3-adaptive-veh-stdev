@@ -162,12 +162,13 @@ private:
   void HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
                                 Ptr<Node> rxNode, int txNodeId,int rxNodeId, double prio, int MsgId);
   void ReInitNodes();
+  void PrintCrashStatus(int crash_num);
   int GetPriorityLevel(int sendingNodeId);
   int GetPriorityLevel(int sendingNodeId, int rxNodeId);
   double GetAdaptivePriorityLevel(int sendingNodeId);
   double GetAdaptivePriorityLevel(int sendingNodeId, int rxNodeId);
   double GetTTC(int sendingNodeId, int rxNodeId);
-  
+
   /**
    * \brief Get the node for the desired id
    * \param id the id of the desired node
