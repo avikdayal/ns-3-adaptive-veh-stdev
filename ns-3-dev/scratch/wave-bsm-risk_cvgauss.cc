@@ -2339,7 +2339,7 @@ VanetRoutingExperiment::SetupAdhocMobilityNodes ()
       var->SetStream (stream);
       var2->SetStream (stream2);
       static int num_lanes=3;
-      int lane_pos[num_lanes] = {0};
+      int lane_pos[3] = {0};
       int curr_lane =0;
       double lane_y[]  = {2.0, 6.0, 8.0};
 
@@ -2349,7 +2349,7 @@ VanetRoutingExperiment::SetupAdhocMobilityNodes ()
         Vector posm = mob->GetPosition (); // Get position
         double x = lane_pos[curr_lane];
         mob->SetPosition(Vector(x, lane_y[curr_lane], posm.y));
-        Vector node_vel=Vector(30+std::sqrt(5)*var->GetValue (), 0.0, 0.0);
+        Vector node_vel=Vector(30+std::sqrt(16)*var->GetValue (), 0.0, 0.0);
         //Vector node_vel=Vector(30+0.5*var->GetValue (), 0.0, 0.0);
         mob->SetVelocity(node_vel);
         velocities[i]=node_vel;

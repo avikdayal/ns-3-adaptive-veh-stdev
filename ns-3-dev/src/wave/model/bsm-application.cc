@@ -28,16 +28,18 @@
 #include "ns3/mobility-helper.h"
 #include "ns3/mobility-module.h"
 #include "ns3/seq-ts-header.h"
+#include "adaptive_priotag.h"
 #include <atomic>
 NS_LOG_COMPONENT_DEFINE ("BsmApplication");
 
 // chnahe the followig values for experiment
-#define ADAPTIVE_PRIO
+//#define ADAPTIVE_PRIO
 
 #define TTC_THRESH 5.0
 #define TTC_THRESH_UPPER 15.0
-#define CRASH_THRESHOLD 4
+#define CRASH_THRESHOLD 4.8
 #define PRIO_MANUEVER_THRESHOLD 5.0
+#define NUM_LANES 3
 
 namespace ns3 {
 
@@ -1364,8 +1366,8 @@ void BsmApplication::ReInitNodes () {
 	int64_t stream2 = 2;
 	var->SetStream (stream);
 	var2->SetStream (stream2);
-  static int num_lanes=3;
-  int lane_pos[num_lanes] = {0};
+  static int num_lanes=NUM_LANES;
+  int lane_pos[NUM_LANES] = {0};
   int curr_lane =0;
   double lane_y[]  = {2.0, 6.0, 8.0};
   double veh_spacing=ROAD_LENGTH_NUM*num_lanes/m_adhocTxInterfaces->GetN();
@@ -1375,7 +1377,7 @@ void BsmApplication::ReInitNodes () {
 		Vector posm = mob->GetPosition (); // Get position
     double x = lane_pos[curr_lane];
     mob->SetPosition(Vector(x, lane_y[curr_lane], posm.y));
-    Vector node_vel=Vector(30+std::sqrt(5)*var->GetValue (), 0.0, 0.0);
+    Vector node_vel=Vector(30+std::sqrt(16)*var->GetValue (), 0.0, 0.0);
     //Vector node_vel=Vector(30+0.5*var->GetValue (), 0.0, 0.0);
     mob->SetVelocity(node_vel);
     posm = mob->GetPosition (); // Get position
