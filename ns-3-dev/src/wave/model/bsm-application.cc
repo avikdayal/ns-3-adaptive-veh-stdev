@@ -163,6 +163,8 @@ double highwaylength=ROAD_LENGTH_NUM;
 //int crashes=0;
 static std::atomic<int> crashes(0);
 static std::atomic<int> manuevers(0);
+static EventId NodeSchedule[200] ;
+static Time totalTxTime;
 //static std::atomic<int> MsgId(0);
 // (Arbitrary) port for establishing socket to transmit WAVE BSMs
 int BsmApplication::wavePort = 9080;
@@ -227,7 +229,7 @@ void BsmApplication::StartApplication () // Called at time specified by Start
   // BSMs are not transmitted for the first second
   Time startTime = Seconds (1.0);
   // total length of time transmitting WAVE packets
-  Time totalTxTime = m_TotalSimTime - startTime;
+  totalTxTime = m_TotalSimTime - startTime;
   // total WAVE packets needing to be sent
   m_numWavePackets = (uint32_t) (totalTxTime.GetDouble () / m_waveInterval.GetDouble ());
   m_numWavePackets=m_numWavePackets*2;
@@ -326,7 +328,7 @@ void BsmApplication::StartApplication () // Called at time specified by Start
     /*Simulator::ScheduleWithContext (recvSink->GetNode ()->GetId (),
                                     txTime, &BsmApplication::GeneratePriorityWaveTraffic, this,
                                     recvSink, m_wavePacketSize, m_numWavePackets, waveInterPacketInterval, m_nodeId);*/
-    Simulator::ScheduleWithContext (recvSink->GetNode ()->GetId (),
+    NodeSchedule[recvSink->GetNode ()->GetId ()] = Simulator::Schedule (//recvSink->GetNode ()->GetId (),
                                     txTime, &BsmApplication::GeneratePriorityWaveTraffic, this,
                                     recvSink, m_wavePacketSize, totalTxTime.GetSeconds(), waveInterPacketInterval, m_nodeId);
     //out2.close();
@@ -338,7 +340,7 @@ void BsmApplication::StartApplication () // Called at time specified by Start
     out2.open(CSVfileName4.c_str());
     out2 << "Msg ID" << "," << "TxNode"<< "," << "RxNode" << "," << "TxPriority" << "," << "RxPriority" << "," << "Delay" << "," << "ttc" << "," << "dist" <<"," << "tx_vel" << "," << "rx_vel" << "," << "Sys_time" << std::endl;
     out2.close();
-    Simulator::ScheduleWithContext (recvSink->GetNode ()->GetId (),
+    NodeSchedule[recvSink->GetNode ()->GetId ()] =Simulator::Schedule (//recvSink->GetNode ()->GetId (),
                                     txTime, &BsmApplication::GenerateWaveTraffic, this,
                                     recvSink, m_wavePacketSize, m_numWavePackets, waveInterPacketInterval, m_nodeId);
   }
@@ -540,7 +542,7 @@ BsmApplication::GenerateWaveTraffic (Ptr<Socket> socket, uint32_t pktSize,
 		// plus some new [0..10] ms tx delay
 		Time txTime = pktInterval - m_prevTxDelay + txDelay;
 		m_prevTxDelay = txDelay;
-		Simulator::ScheduleWithContext (socket->GetNode ()->GetId (),
+		NodeSchedule[socket->GetNode ()->GetId ()] =Simulator::Schedule(//socket->GetNode ()->GetId (),
 				txTime, &BsmApplication::GeneratePriorityWaveTraffic, this,
 				socket, pktSize, pktCount - 1, pktInterval,  socket->GetNode ()->GetId ());
 	}
@@ -725,7 +727,7 @@ BsmApplication::GeneratePriorityWaveTraffic (Ptr<Socket> socket, uint32_t pktSiz
 		// plus some new [0..10] ms tx delay
 		Time txTime = pktInterval - m_prevTxDelay + txDelay;
 		m_prevTxDelay = txDelay;
-		Simulator::ScheduleWithContext (socket->GetNode ()->GetId (),
+		NodeSchedule[socket->GetNode ()->GetId ()]=Simulator::Schedule(//socket->GetNode ()->GetId (),
 				txTime, &BsmApplication::GeneratePriorityWaveTraffic, this,
 				socket, pktSize, EndTime , pktInterval,  socket->GetNode ()->GetId ());
 	}
@@ -1174,10 +1176,10 @@ void BsmApplication::ReceiveAdaptiveWavePacket (Ptr<Socket> socket)
 
 
                   if(m_prioritytag){
-                    HandleAdaptivePriorityReceivedBsmPacket (txNode, rxNode, txNodeId, rxNode->GetId (), tag.GetPrio(), tag.GetMsgId());
+                    HandleAdaptivePriorityReceivedBsmPacket (txNode, rxNode, txNodeId, rxNode->GetId (), tag.GetPrio(), tag.GetMsgId(), socket);
                   }
                   else{
-                    HandleAdaptivePriorityReceivedBsmPacket (txNode, rxNode, txNodeId, rxNode->GetId (), tag.GetPrio(), tag.GetMsgId());
+                    HandleAdaptivePriorityReceivedBsmPacket (txNode, rxNode, txNodeId, rxNode->GetId (), tag.GetPrio(), tag.GetMsgId(), socket);
                     //HandleReceivedBsmPacket (txNode, rxNode);
                   }
 
@@ -1377,7 +1379,7 @@ void BsmApplication::ReInitNodes () {
 
 
 void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
-		Ptr<Node> rxNode, int txNodeId, int rxNodeId, double prio, int MsgId)
+		Ptr<Node> rxNode, int txNodeId, int rxNodeId, double prio, int MsgId, Ptr<Socket> socket)
 {
 	NS_LOG_FUNCTION (this);
 	//std::cout << "the second one is being used" << '\n';
@@ -1437,14 +1439,23 @@ void BsmApplication::HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
 
 		}
 		else {
-			if (priority_rxtx >= PRIO_MANUEVER_THRESHOLD ) { //&& !NodeInBetween(txNodeId,rxNodeId)) {
+			if (priority_rxtx >= PRIO_MANUEVER_THRESHOLD ){ // && !NodeInBetween(txNodeId,rxNodeId)) {
 				manuevers++;
 				std::cout<< "Time: " << Simulator::Now().GetMilliSeconds ()  << " corrc occurred" << manuevers  << " txNode: " << txNodeId  << " rxNode: " << rxNodeId << " MsgId: " << MsgId << " ttc: " << temp_ttc<< " priorityrxtx: "
 						<< priority_rxtx << " priority: " << priority << " logx_recv" << std::endl ;
-				if ( (posm_rx.x <= posm_tx.x) && (vel_rx.x > vel_tx.x))
+				if ( (posm_rx.x <= posm_tx.x) && (vel_rx.x > vel_tx.x)) {
+          Time waveInterPacketInterval = m_waveInterval;
 					mob_rx->SetVelocity(Vector(vel_tx.x,0.0,0.0));
-				else
+#ifdef ADAPTIVE_PRIO
+          // cancel the existing schedule end execute it now
+          Simulator::Cancel(NodeSchedule[rxNodeId]);
+          NodeSchedule[rxNodeId] = Simulator::ScheduleNow (&BsmApplication::GeneratePriorityWaveTraffic, this,
+  				socket, m_wavePacketSize, totalTxTime.GetSeconds() , waveInterPacketInterval,  socket->GetNode ()->GetId ());
+#endif
+        } //  m_wavePacketSize, totalTxTime.GetSeconds(), waveInterPacketInterval
+				else {
 					mob_tx->SetVelocity(Vector(vel_rx.x,0.0,0.0));
+        }
 			}
 			else {
 				std::cout << "Time: " << Simulator::Now().GetMilliSeconds () << " corrc skipped" << manuevers  << " txNode: " << txNodeId  << " rxNode: " << rxNodeId << " MsgId: " << MsgId << " ttc: " << temp_ttc<< " priorityrxtx: "

@@ -160,7 +160,8 @@ private:
                                 Ptr<Node> rxNode, int txNodeId,int rxNodeId, double prio);
   bool NodeInBetween (int nid1, int nid2);
   void HandleAdaptivePriorityReceivedBsmPacket (Ptr<Node> txNode,
-                                Ptr<Node> rxNode, int txNodeId,int rxNodeId, double prio, int MsgId);
+                                Ptr<Node> rxNode, int txNodeId,int rxNodeId, double prio,
+                                int MsgId,  Ptr<Socket> socket);
   void ReInitNodes();
   void PrintCrashStatus(int crash_num);
   int GetPriorityLevel(int sendingNodeId);
