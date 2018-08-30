@@ -1,0 +1,6 @@
+Waf: Entering directory `/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-RA-simulation/ns-3-dev/build'
+[1797/1930] Compiling scratch/wave-simple-80211p_risk.cc
+[1930/1930] Linking build/scratch/wave-simple-80211p_risk
+Waf: Leaving directory `/Users/avikdayal/Google-Drive/PHD-Thesis/ARL-work/ns-3-RA-simulation/ns-3-dev/build'
+Build commands will be stored in build/compile_commands.json
+'build' finished successfully (3.703s)
