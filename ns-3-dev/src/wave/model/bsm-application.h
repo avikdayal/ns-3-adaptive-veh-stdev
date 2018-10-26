@@ -27,8 +27,8 @@
 #include "ns3/random-variable-stream.h"
 #include "ns3/internet-stack-helper.h"
 
-#define ROAD_LENGTH_NUM  2000.0
-#define ROAD_LENGTH_STR "2000.0"
+#define ROAD_LENGTH_NUM  1000.0
+#define ROAD_LENGTH_STR "1000.0"
 
 //#define ROAD_LENGTH_NUM  300.0
 //#define ROAD_LENGTH_STR "300.0"
